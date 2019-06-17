@@ -4,17 +4,10 @@ use ExtUtils::MakeMaker;
 use Config;
 
 # update.sh shouldn't be used, needs fix
-#if (-d '../.git') {
+#if (-d '.git') {
 #    system("./update.sh") == 0
 #        or die "update.sh failed";
 #}
-
-unlink 'Safe.c'; # avoid duplicates
-my $obj_files = join ' ', map {
-    my $c = $_;
-    $c =~ s/\.c$/$Config::Config{_o}/;
-    $c;
-} glob("XS/*.c"), 'Safe.c';
 
 my $DEFINE = '';
 # https://gcc.gnu.org/onlinedocs/gcc-4.0.0/gcc/Warning-Options.html
@@ -40,7 +33,7 @@ WriteMakefile(
     'File::Path' => 0.1,
     'lib' => 0.1,
   },
-  INC => '-IXS',
+  INC => '-I.',
   LIBS => [''], # e.g., '-lm'
   DEFINE => $DEFINE,
   AUTHOR => 'Reini Urban <rurban@cpan.org>',

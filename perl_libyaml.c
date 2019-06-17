@@ -856,6 +856,7 @@ set_dumper_options(perl_yaml_dumper_t *dumper)
     GV *gv;
     yaml_encoding_t result = YAML_UTF8_ENCODING;
     char* boolean = "";
+    SV* indent;
 
     dumper->dump_code = (
         ((gv = gv_fetchpv("YAML::Safe::UseCode", GV_NOADD_NOINIT, SVt_IV))
@@ -872,7 +873,7 @@ set_dumper_options(perl_yaml_dumper_t *dumper)
     dumper->filename = NULL;
 
     /* Set if unescaped non-ASCII characters are allowed. */
-    SV* indent = get_sv("YAML::Safe::Indent", GV_NOADD_NOINIT);
+    indent = get_sv("YAML::Safe::Indent", GV_NOADD_NOINIT);
     if (indent && SvIOK(indent))
         yaml_emitter_set_indent(&dumper->emitter, SvIV(indent));
     
