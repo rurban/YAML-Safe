@@ -1,7 +1,7 @@
-package t::TestYAMLTests;
+package TestYAMLTests;
 use lib 'inc';
 use Test::Base -Base;
-@t::TestYAMLTests::EXPORT = qw(Load Dump LoadFile DumpFile n2y y2n nyny get_block_by_name);
+@TestYAMLTests::EXPORT = qw(Load Dump LoadFile DumpFile n2y y2n nyny get_block_by_name);
 
 sub load_config() {
     my $config_file = shift;
@@ -113,21 +113,21 @@ sub DumpFile() {
 no_diff;
 delimiters ('===', '+++');
 
-package t::TestYAMLTests::Filter;
+package TestYAMLTests::Filter;
 use Test::Base::Filter -Base;
 
 sub load_yaml {
-    t::TestYAMLTests::Load(@_);
+    TestYAMLTests::Load(@_);
 }
 
 sub dump_yaml {
-    t::TestYAMLTests::Dump(@_);
+    TestYAMLTests::Dump(@_);
 }
 
 sub loadfile_yaml {
-    t::TestYAMLTests::LoadFile(@_);
+    TestYAMLTests::LoadFile(@_);
 }
 
 sub dumpfile_yaml {
-    t::TestYAMLTests::DumpFile(@_);
+    TestYAMLTests::DumpFile(@_);
 }

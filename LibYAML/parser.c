@@ -1301,7 +1301,7 @@ yaml_parser_process_directives(yaml_parser_t *parser,
         if (!token)
             goto error;
     }
-    
+
     for (default_tag_directive = default_tag_directives;
             default_tag_directive->handle; default_tag_directive++) {
         if (!yaml_parser_append_tag_directive(parser, *default_tag_directive, 1,
@@ -1326,6 +1326,8 @@ yaml_parser_process_directives(yaml_parser_t *parser,
         STACK_DEL(parser, tag_directives);
     }
 
+    if (!version_directive_ref)
+        yaml_free(version_directive);
     return 1;
 
 error:

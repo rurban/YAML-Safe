@@ -118,7 +118,12 @@ yaml_string_join(
 YAML_DECLARE(int)
 yaml_stack_extend(void **start, void **top, void **end)
 {
-    void *new_start = yaml_realloc(*start, ((char *)*end - (char *)*start)*2);
+    void *new_start;
+
+    if ((char *)*end - (char *)*start >= INT_MAX / 2)
+	return 0;
+
+    new_start = yaml_realloc(*start, ((char *)*end - (char *)*start)*2);
 
     if (!new_start) return 0;
 
@@ -416,7 +421,7 @@ yaml_string_write_handler(void *data, unsigned char *buffer, size_t size)
 {
   yaml_emitter_t *emitter = (yaml_emitter_t *)data;
 
-    if (emitter->output.string.size + *emitter->output.string.size_written
+    if (emitter->output.string.size - *emitter->output.string.size_written
             < size) {
         memcpy(emitter->output.string.buffer
                 + *emitter->output.string.size_written,
@@ -1117,12 +1122,7 @@ error:
 YAML_DECLARE(void)
 yaml_document_delete(yaml_document_t *document)
 {
-    struct {
-        yaml_error_type_t error;
-    } context;
     yaml_tag_directive_t *tag_directive;
-
-    context.error = YAML_NO_ERROR;  /* Eliminate a compliler warning. */
 
     assert(document);   /* Non-NULL document object is expected. */
 

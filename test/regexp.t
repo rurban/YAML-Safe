@@ -1,4 +1,6 @@
-use t::TestYAMLTests tests => 18;
+use FindBin '$Bin';
+use lib $Bin;
+use TestYAMLTests tests => 19;
 use Devel::Peek();
 
 my $rx1 = qr/5050/;
@@ -13,7 +15,9 @@ my $yaml3 = Dump $rx3;
 
 sub perl514 {
     # https://rt.cpan.org/Ticket/Display.html?id=62266
-    skip "perl-5.14 regexp stringification is different", shift || 1 if $] > 5.013;
+    skip "FIXME - perl-5.14 regexp stringification is different", shift || 1
+	if $] > 5.013
+	or $] < 5.010;
 }
 
 SKIP: { perl514 5;
@@ -78,3 +82,9 @@ is ref($rx5_), 'Regexp', 'Can Load a unicode regexp';
 SKIP: { perl514;
 is $rx5_, "(?msix:\x{100})", 'Loaded unicode regexp value is correct';
 }
+
+my $rx6 = Load("--- !!perl/regexp foo\n");
+my $rx6_yaml = Dump $rx6;
+$rx6 = Load($rx6_yaml);
+my $rx6_yaml2 = Dump Load Dump $rx6;
+cmp_ok($rx6_yaml2, 'eq', $rx6_yaml, "Regex roundtrip ok");

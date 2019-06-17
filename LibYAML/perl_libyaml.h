@@ -7,6 +7,7 @@
 
 #include "EXTERN.h"
 #include "perl.h"
+#define NO_XSLOCKS
 #include "XSUB.h"
 #define NEED_newRV_noinc
 #define NEED_sv_2pv_nolen
@@ -29,6 +30,9 @@ typedef struct {
     yaml_event_t event;
     HV *anchors;
     int load_code;
+    int load_bool_jsonpp;
+    int load_bool_boolean;
+    int load_blessed;
     int document;
     char *filename;
     PerlIO *perlio;
@@ -40,6 +44,8 @@ typedef struct {
     HV *anchors;
     HV *shadows;
     int dump_code;
+    int dump_bool_jsonpp;
+    int dump_bool_boolean;
     int quote_number_strings;
     char *filename;
     PerlIO *perlio;

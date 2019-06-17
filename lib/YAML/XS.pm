@@ -1,7 +1,7 @@
 use strict; use warnings;
 
 package YAML::XS;
-our $VERSION = '0.70';
+our $VERSION = '0.79_01';
 
 use base 'Exporter';
 
@@ -10,6 +10,7 @@ use base 'Exporter';
 %YAML::XS::EXPORT_TAGS = (
     all => [qw(Dump Load LoadFile DumpFile)],
 );
+our ($UseCode, $DumpCode, $LoadCode, $Boolean, $LoadBlessed, $Indent);
 # $YAML::XS::NonStrict = 1; # for Load
 # $YAML::XS::UseCode = 0;   # for Dump
 # $YAML::XS::DumpCode = 0;  # for Dump
@@ -20,15 +21,42 @@ $YAML::XS::QuoteNumericStrings = 1;
 use YAML::XS::LibYAML qw(Load LoadFile Dump DumpFile);
 use Scalar::Util qw/ openhandle /;
 
-# XXX Figure out how to lazily load this module.
-# So far I've tried using the C function:
-#      load_module(PERL_LOADMOD_NOIMPORT, newSVpv("B::Deparse", 0), NULL);
-# But it didn't seem to work.
-use B::Deparse;
+sub DumpFile {
+    my $OUT;
+    my $filename = shift;
+    if (openhandle $filename) {
+        $OUT = $filename;
+    }
+    else {
+        my $mode = '>';
+        if ($filename =~ /^\s*(>{1,2})\s*(.*)$/) {
+            ($mode, $filename) = ($1, $2);
+        }
+        open $OUT, $mode, $filename
+          or die "Can't open '$filename' for output:\n$!";
+    }
+    local $/ = "\n"; # reset special to "sane"
+    print $OUT YAML::XS::LibYAML::Dump(@_);
+}
+
+sub LoadFile {
+    my $IN;
+    my $filename = shift;
+    if (openhandle $filename) {
+        $IN = $filename;
+    }
+    else {
+        open $IN, $filename
+          or die "Can't open '$filename' for input:\n$!";
+    }
+    return YAML::XS::LibYAML::Load(do { local $/; local $_ = <$IN> });
+}
+
 
 # XXX The following code should be moved from Perl to C.
 $YAML::XS::coderef2text = sub {
     my $coderef = shift;
+    require B::Deparse;
     my $deparse = B::Deparse->new();
     my $text;
     eval {
@@ -89,13 +117,25 @@ use constant _QR_MAP => {
 };
 
 sub __qr_loader {
-    if ($_[0] =~ /\A  \(\?  ([ixsm]*)  (?:-  (?:[ixsm]*))?  : (.*) \)  \z/x) {
-        my $sub = _QR_MAP->{$1} || _QR_MAP->{''};
-        &$sub($2);
+    if ($_[0] =~ /\A  \(\?  ([\^uixsm]*)  (?:-  (?:[ixsm]*))?  : (.*) \)  \z/x) {
+        my ($flags, $re) = ($1, $2);
+        $flags =~ s/^\^//;
+        $flags =~ tr/u//d;
+        my $sub = _QR_MAP->{$flags} || _QR_MAP->{''};
+        my $qr = &$sub($re);
+        return $qr;
     }
-    else {
-        qr/$_[0]/;
+    return qr/$_[0]/;
+}
+
+sub __code_loader {
+    my ($string) = @_;
+    my $sub = eval "sub $string";
+    if ($@) {
+        warn "YAML::XS failed to load sub: $@";
+        return sub {};
     }
+    return $sub;
 }
 
 1;

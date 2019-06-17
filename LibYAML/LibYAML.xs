@@ -47,3 +47,13 @@ DumpFile (yaml_file, ...)
             XSRETURN_UNDEF;
         else
             XSRETURN_YES;
+
+SV *
+libyaml_version()
+    CODE:
+    {
+        const char *v = yaml_get_version_string();
+        RETVAL = newSVpv(v, strlen(v));
+
+    }
+    OUTPUT: RETVAL

@@ -40,6 +40,10 @@ However the loader is stricter than `YAML`, `YAML::Syck` and
 variable `$YAML::XS::NonStrict` to allow certain reader errors to
 pass the `CPAN::Meta` validation testsuite.
 
+This module exports the functions `Dump`, `Load`, `DumpFile` and `LoadFile`.
+These functions are intended to work exactly like `YAML.pm`'s corresponding
+functions. Only `Load` and `Dump` are exported by default.
+
 = Configuration
 
 == Loader Options
@@ -131,18 +135,80 @@ Default utf8
 
 Set to any, utf8, utf16le or utf16be
 
+- `$YAML::XS::LoadBlessed` (since v0.69)
+
+  Default: true. The default might be changed to false in the future.
+
+  When set to false, it will not bless data into objects, which can be
+  a security problem, when loading YAML from an untrusted source.
+  It will silently ignore the tag and just load the data unblessed.
+
+  In PyYAML, this is called SafeLoad.
+
+  If set to true, it will load the following YAML as objects:
+
+    ---
+    local: !Foo::Bar [a]
+    perl: !!perl/hash:Foo::Bar { a: 1 }
+    regex: !!perl/regexp:Foo::Bar pattern
+
+
 -- `$YAML::XS::LineBreak`
 
 Default ln
 
 Set to any, cr, ln or crln.
 
--- `$YAML::XS::OpenEnded`
+  Note that support for loading code was added in version 0.75, although
+  C<$LoadCode> was documented already in earlier versions.
+
+- `$YAML::XS::QuoteNumericStrings`
 
 Default 0
 
 Set to 1 or a true value to embed the yaml into "...".
 If an explicit document end is required.
+
+- `$YAML::XS::Boolean` (since v0.67)
+
+  Default is undef.
+
+  When set to `"JSON::PP"` or `"boolean"`, the plain (unquoted) strings `true`
+  and `false` will be loaded as `JSON::PP::Boolean` or `boolean.pm` objects.
+  Those objects will be dumped again as plain "true" or "false".
+
+  It will try to load [JSON::PP] or [boolean] and die if it can't be loaded.
+
+  With that it's possible to add new "real" booleans to a data structure:
+
+      local $YAML::XS::Boolean = "JSON::PP"; # or "boolean"
+      my $data = Load("booltrue: true");
+      $data->{boolfalse} = JSON::PP::false;
+      my $yaml = Dump($data);
+      # boolfalse: false
+      # booltrue: true
+
+  It also lets booleans survive when loading YAML via YAML::XS and
+  encode it in JSON via one of the various JSON encoders, which mostly support
+  JSON::PP booleans.
+
+  Please note that JSON::PP::Boolean and boolean.pm behave a bit differently.
+  Ideally you should only use them in boolean context.
+
+  If not set, booleans are loaded as special perl variables `PL_sv_yes` and
+  `PL_sv_no`, which have the disadvantage that they are readonly, and you can't
+  add those to an existing data structure with pure perl.
+
+  If you simply need to load "perl booleans" that are true or false in boolean
+  context, you will be fine with the default setting.
+
+
+- `$YAML::XS::Indent` (since v0.76)
+
+  Default is 2.
+
+  Sets the number of spaces for indentation for `Dump`.
+
 
 = Using YAML::XS with Unicode
 
@@ -155,11 +221,17 @@ streams of utf8 octets. Just remember this:
 There are many, many places where things can go wrong with unicode.  If you
 are having problems, use Devel::Peek on all the possible data points.
 
+= libyaml
+
+You can find out (since v.079) which libyaml version this module was built with:
+
+    my $libyaml_version = YAML::XS::LibYAML::libyaml_version();
+
 = See Also
 
-* YAML.pm
-* YAML::Syck
-* YAML::Tiny
-* CPAN::Meta::YAML
+* [YAML].pm
+* [YAML::Syck]
+* [YAML::Tiny]
+* [CPAN::Meta::YAML]
 
 <<<cpan-tail>>>

@@ -1,4 +1,111 @@
 ---
+version: 0.79_01
+date:    Mon 17 Jun 2019 10:14:30 AM CEST
+changes:
+- Merge with cperl fixes (rurban) to be usable for CPAN and in core.
+---
+version: 0.79
+date:    Tue 11 Jun 2019 09:35:22 PM CEST
+changes:
+- Support aliasing scalars resolved as null or booleans (tinita)
+- Add YAML::XS::LibYAML::libyaml_version() (tinita)
+- Support standard !!int/!!float tags instead of dying (tinita)
+---
+version: 0.78
+date:    Sat 18 May 2019 06:35:21 PM CEST
+changes:
+- Fix double free/core dump when Dump()ing binary data, see issue#91 (tinita)
+- Update config.h from libyaml (tinita)
+---
+version: 0.77
+date:    Mon 15 Apr 2019 10:55:13 PM CEST
+changes:
+- "Update libyaml to version 0.2.2. Most important change for users is that
+  plain urls in flow style can be parsed now. Example: `[ http://yaml.org ]`.
+  (tinita)"
+---
+version: 0.76
+date:    Sun Dec 30 20:10:16 CET 2018
+changes:
+- Add $Indent - number of spaces when dumping. PR#89 @zdm++
+- Fix typo in docs. PR#87 @mr-mixas++
+- Fix links in docs. @manwar++
+---
+version: 0.75
+date:    Sat Nov  3 14:17:28 CET 2018
+changes:
+- Implement $LoadCode (tinita)
+---
+version: 0.74
+date:    Fri Aug 31 18:06:17 PDT 2018
+changes:
+- Fix tests on older perls
+- Support back to perl.5.8.1
+---
+version: 0.72
+date:    Sun Jul  8 17:03:08 CEST 2018
+changes:
+- Update to libyaml 0.2.1 (tinita) It's forbidden now to escape single quotes
+  inside double quotes
+- When disabling $LoadBlessed, return scalars not refs (tinita)
+- Save anchors also for blessed scalars (tinita)
+---
+version: 0.70
+date:    Sat Jun  9 21:53:05 CEST 2018
+changes:
+- Fix format specifier/argument mismatch PR#79 @a3f++
+- 'Travis CI: Test on Perl 5.26 PR#80 @a3f++'
+- Fix a C90-compatibility issue PR#81 @stphnlyd++
+---
+version: 0.69
+date:    Tue Dec 26 18:37:25 CET 2017
+changes:
+- Security fix Add $LoadBlessed option to turn on/off loading objects
+  PR#73 PR#74 TINITA++
+---
+version: 0.68
+date:    Mon Dec 18 20:01:05 CET 2017
+changes:
+- Fix regex roundtrip (fixes issue#69) PR#70 (TINITA++)
+- Fix loading of many regexes (fixes issue#64) PR#71 (TINITA++)
+---
+version: 0.67
+date:    Wed Nov 15 18:59:33 CET 2017
+changes:
+- Support standard tags !!str, !!map and !!seq instead of dying.
+  PR#67 (TINITA++)
+- Support JSON::PP::Boolean and boolean.pm via $YAML::XS::Boolean.
+  PR#66 (TINITA++) Thanks also to Björn Höhrmann for SvPV_nolen()
+---
+version: 0.66
+date:    Thu Aug 17 20:06:06 CEST 2017
+changes:
+- Apply PR#55 (@vti++)
+- Dump() was modifying original data, adding a PV to numbers
+- Added a test for this (TINITA++)
+---
+version: 0.65
+date:    Thu 18 May 23:09:38 CEST 2017
+changes:
+- Prevent warning about unused variables (see issue#59)
+- Clarify documentation about exported functions
+---
+version: 0.64
+date:    Fri  7 Apr 20:32:01 CEST 2017
+changes:
+- use lib FindBin::Bin in tests, preparing for perl 5.26 where '.'
+  gets removed from @INC. Fixes issue#54 TINITA++
+- Use the latest libyaml sources.
+- Lazy load B::Deparse for faster startup time.
+  Applied PR/53 by @perlpunk++
+  (submitted by @carnil++ from a Debian issue as GitHub issue#52)
+---
+version: 0.63
+date:    Fri Jul  8 14:40:35 UTC 2016
+changes:
+- Apply PR/48 by @perlpunk++
+- Fixes memory leaks
+---
 version: 0.62
 date:    Mon Feb 22 15:46:06 UTC 2016
 changes:

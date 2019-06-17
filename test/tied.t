@@ -1,4 +1,6 @@
-use t::TestYAMLTests;
+use FindBin '$Bin';
+use lib $Bin;
+use TestYAMLTests;
 
 BEGIN {
     if ($] < 5.010000) {
@@ -14,9 +16,9 @@ use Tie::Hash;
 
 my $yaml1 = <<'...';
 ---
-- 'foo'
-- 'bar'
-- 'baz'
+- foo
+- bar
+- baz
 ...
 
 {
@@ -29,9 +31,9 @@ my $yaml1 = <<'...';
 
 my $yaml2 = <<'...';
 ---
-bar: 'bar'
-baz: 'baz'
-foo: 'foo'
+bar: bar
+baz: baz
+foo: foo
 ...
 
 {

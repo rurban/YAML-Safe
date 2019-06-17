@@ -1,6 +1,5 @@
-
 #if HAVE_CONFIG_H
-#include <config.h>
+#include "config.h"
 #endif
 
 #include <yaml.h>
@@ -8,16 +7,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <stddef.h>
-
-#ifndef _MSC_VER
-#include <stdint.h>
-#else
-#ifdef _WIN64
-#define PTRDIFF_MAX _I64_MAX
-#else
-#define PTRDIFF_MAX INT_MAX
-#endif
-#endif
 
 /*
  * Memory management.
@@ -76,6 +65,17 @@ yaml_parser_fetch_more_tokens(yaml_parser_t *parser);
  */
 
 #define OUTPUT_RAW_BUFFER_SIZE  (OUTPUT_BUFFER_SIZE*2+2)
+
+/*
+ * The maximum size of a YAML input file.
+ * This used to be PTRDIFF_MAX, but that's not entirely portable
+ * because stdint.h isn't available on all platforms.
+ * It is not entirely clear why this isn't the maximum value
+ * that can fit into the parser->offset field.
+ */
+
+#define MAX_FILE_SIZE (~(size_t)0 / 2)
+
 
 /*
  * The size of other stacks and queues.
@@ -171,14 +171,14 @@ yaml_string_join(
  * Check the octet at the specified position.
  */
 
-#define CHECK_AT(string,octet,offset)                                           \
+#define CHECK_AT(string,octet,offset)                   \
     ((string).pointer[offset] == (yaml_char_t)(octet))
 
 /*
  * Check the current octet in the buffer.
  */
 
-#define CHECK(string,octet) CHECK_AT((string),(octet),0)
+#define CHECK(string,octet) (CHECK_AT((string),(octet),0))
 
 /*
  * Check if the character at the specified position is an alphabetical
@@ -242,9 +242,9 @@ yaml_string_join(
         (string).pointer[offset] <= (yaml_char_t) 'f') ?                        \
        ((string).pointer[offset] - (yaml_char_t) 'a' + 10) :                    \
        ((string).pointer[offset] - (yaml_char_t) '0'))
- 
+
 #define AS_HEX(string)  AS_HEX_AT((string),0)
- 
+
 /*
  * Check if the character is ASCII.
  */
