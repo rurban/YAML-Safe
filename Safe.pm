@@ -2,10 +2,12 @@ use strict; use warnings;
 
 package YAML::Safe;
 our $VERSION = '0.80';
+our $XS_VERSION = $VERSION;
+# $VERSION = eval $VERSION;
 
 use base 'Exporter';
-@YAML::Safe::EXPORT = qw(Load Dump);
-@YAML::Safe::EXPORT_OK = qw(LoadFile DumpFile);
+@YAML::Safe::EXPORT = qw(Load Dump LoadFile DumpFile);
+#@YAML::Safe::EXPORT_OK = qw();
 %YAML::Safe::EXPORT_TAGS = (
     all => [qw(Dump Load LoadFile DumpFile)],
 );
@@ -18,10 +20,9 @@ our ($UseCode, $DumpCode, $LoadCode, $Boolean, $LoadBlessed, $Indent);
 $YAML::Safe::QuoteNumericStrings = 1;
 
 use XSLoader;
-XSLoader::load 'YAML::Safe';
 use Scalar::Util qw/ openhandle /;
 
-sub DumpFile {
+sub _DumpFile {
     my $OUT;
     my $filename = shift;
     if (openhandle $filename) {
@@ -39,7 +40,7 @@ sub DumpFile {
     print $OUT YAML::Safe::_Dump(@_);
 }
 
-sub LoadFile {
+sub _LoadFile {
     my $IN;
     my $filename = shift;
     if (openhandle $filename) {
@@ -137,6 +138,10 @@ sub __code_loader {
     }
     return $sub;
 }
+
+XSLoader::load 'YAML::Safe', $XS_VERSION;
+
+1;
 __END__
 
 =head1 Name
@@ -197,40 +202,6 @@ However the loader is stricter than C<YAML>, C<YAML::Syck> and
 C<CPAN::Meta::YAML> i.e. C<YAML::Tiny> as used in core. Set the variable
 C<$YAML::Safe::NonStrict> to allow certain reader errors to pass the
 C<CPAN::Meta> validation testsuite.
-
-=head1 CLASSES
-
-=over
-
-=item YAML::Safe
-
-The exported name of the class for the old functions. No methods, only set
-options via globals.
-
-=item YAML::Safe::XS
-
-The internal name of the class for the old functions. No methods, only set
-options via globals.
-
-=item YAML::Safe::Loader
-
-The new loader objectinterface, which has methods for options and loaders.
-
-=item YAML::Safe::Dumper
-
-The new dumper object interface, which has methods for options and dumpers.
-
-=item YAML::Safe::SafeLoader
-
-The new loader and restricted object interface, which has methods for options
-and the safe loaders.
-
-=item YAML::Safe::SafeDumper
-
-The new dumper and restricted object interface, which has methods for options
-and the safe dumpers.
-
-=back
 
 =head1 FUNCTIONS
 
@@ -429,4 +400,3 @@ See L<http://www.perl.com/perl/misc/Artistic.html>
 
 =cut
 
-1;

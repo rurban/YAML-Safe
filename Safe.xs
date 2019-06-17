@@ -5,7 +5,7 @@ MODULE = YAML::Safe		PACKAGE = YAML::Safe
 PROTOTYPES: DISABLE
 
 void
-_Load (yaml_string)
+Load (yaml_string)
         SV *yaml_string
   PPCODE:
         PL_markstack_ptr++;
@@ -25,7 +25,7 @@ LoadFile (yaml_file)
             return;
 
 void
-_Dump (...)
+Dump (...)
   PPCODE:
         PL_markstack_ptr++;
         if (!Dump())

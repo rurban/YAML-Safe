@@ -1240,13 +1240,8 @@ dump_node(perl_yaml_dumper_t *dumper, SV *node)
             }
             else {
                 klass = sv_reftype(rnode, TRUE);
-                if (
-                        dumper->dump_bool_jsonpp
-                        && strEQc(klass, "JSON::PP::Boolean")
-                    ||
-                        dumper->dump_bool_boolean
-                        && strEQc(klass, "boolean")
-                    ) {
+                if ((dumper->dump_bool_jsonpp && strEQc(klass, "JSON::PP::Boolean"))
+                 || (dumper->dump_bool_boolean && strEQc(klass, "boolean"))) {
                     if (SvIV(node)) {
                         dump_scalar(dumper, &PL_sv_yes, NULL);
                     }

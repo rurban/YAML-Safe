@@ -35,6 +35,7 @@ WriteMakefile(
   },
   INC => '-I.',
   LIBS => [''], # e.g., '-lm'
+  OBJECT => q/$(O_FILES)/,
   DEFINE => $DEFINE,
   AUTHOR => 'Reini Urban <rurban@cpan.org>',
 );
