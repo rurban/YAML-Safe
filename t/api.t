@@ -21,8 +21,8 @@ package main;
 
 ok defined(&A::Dump), 'Dump is exported by default';
 ok defined(&A::Load), 'Load is exported by default';
-ok not(defined(&A::DumpFile)), 'DumpFile is not exported by default';
-ok not(defined(&A::LoadFile)), 'LoadFile is not exported by default';
+ok defined(&A::DumpFile), 'DumpFile is exported by default';
+ok defined(&A::LoadFile), 'LoadFile is exported by default';
 
 ok not(defined(&B::Dump)), 'Dump is not exported for ()';
 ok not(defined(&B::Load)), 'Load is not exported for ()';
