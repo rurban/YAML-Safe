@@ -143,6 +143,7 @@ XSLoader::load 'YAML::Safe', $XS_VERSION;
 
 1;
 __END__
+=encoding UTF-8
 
 =head1 Name
 
@@ -215,7 +216,11 @@ C<CPAN::Meta> validation testsuite.
 
 =item DumpFile
 
+=back
+
 =head1 METHODS
+
+=over
 
 =item new "classname", option => value, ...
 
@@ -254,10 +259,10 @@ via globals variables or as optional getter and setter methods.
 =item C<$YAML::Safe::NonStrict>
 
 Permit certain reader errors to loosely match other YAML module semantics. In
-detail: Allow B<"control characters are not allowed"`. Note that any error is
+detail: Allow B<"control characters are not allowed">. Note that any error is
 stored and returned, just not immediately.
 
-However the reader error B<"invalid trailing UTF-8 octet"` and all other utf8
+However the reader error B<"invalid trailing UTF-8 octet"> and all other utf8
 strictness violations are still fatal.
 
 And if the structure of the YAML document cannot be parsed, i.e. a required
@@ -268,9 +273,13 @@ error, unlike with non-strict YAML modules.
 
 Ignored. If enabled supports deparsing and evaling of code blocks.
 
+=back
+
 =head2 Dumper Options
 
 via globals variables or as optional getter and setter methods.
+
+=over
 
 =item C<$YAML::Safe::UseCode>
 

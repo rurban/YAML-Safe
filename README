@@ -1,0 +1,204 @@
+Name
+    YAML::Safe - Safe Perl YAML Serialization using XS and libyaml
+
+Synopsis
+        use YAML::Safe;
+
+        my $yaml = Dump [ 1..4 ];
+        my $array = Load $yaml;
+
+        my $yaml = DumpFile ("my.yml", [ 1..4 ]);
+        my $array = LoadFile "my.yml";
+
+        my $yaml = new YAML::Safe;
+        $yaml->NonStrict(1);
+        $yaml->Encoding("any");
+        $yaml->SafeClass("DateTime");
+        my $array = $yaml->SafeLoadFile("META.yml");
+
+        my $yaml = new YAML::Safe;
+        $yaml->Canonical(1);
+        $yaml->Unicode(1);
+        $yaml->SafeClass("DateTime");
+        my $array = $yaml->SafeDumpFile("META.yml");
+
+Description
+    Kirill Siminov's "libyaml" is a good YAML library implementation. The C
+    library is written precisely to the YAML 1.1 specification, and offers
+    YAML 1.2 support. It was originally bound to Python and was later bound
+    to Ruby. "libsyck" is written a bit more elegant, has less bugs, is not
+    as strict as libyaml, but misses some YAML features. It can only do YAML
+    1.0
+
+    This module is a refactoring of YAML::XS, the old Perl XS binding to
+    libyaml which offers Perl somewhat acceptable YAML support to date.
+    YAML::XS never produced code which could be read from YAML, and thus was
+    unsuitable to be used as YAML replacement for core and CPAN.
+
+    This module exports the functions "Dump", "Load", "DumpFile" and
+    "LoadFile". These functions are intended to work exactly like YAML::XS
+    and "YAML.pm"'s corresponding functions.
+
+    There are also new Safe variants of Load and Dump methods, and the
+    possibility to create a YAML object, set options as setter methods and
+    call the Safe methods.
+
+    If you set the option $YAML::Safe::IndentlessMap to 0 or undef,
+    "YAML::Safe" will behave like with version < 0.70, which creates yml
+    files which cannot be read by "YAML.pm"
+
+    However the loader is stricter than "YAML", "YAML::Syck" and
+    "CPAN::Meta::YAML" i.e. "YAML::Tiny" as used in core. Set the variable
+    $YAML::Safe::NonStrict to allow certain reader errors to pass the
+    "CPAN::Meta" validation testsuite.
+
+FUNCTIONS
+    Load
+    LoadFile
+    Dump
+    DumpFile
+
+METHODS
+    new "classname", option => value, ...
+        Create a YAML loader or dumper object with some options.
+
+    SafeClass "classname", ...
+        Add a string or list of strings to the list of allowed classes to
+        the "Safe{Load,Dump}" methods. Without any SafeClass added, no
+        custom "!" classes are allow in the YAML.
+
+    SafeLoad
+        Restrict the loader to the registered safe classes only.
+
+    SafeLoadFile
+    SafeDump
+        Restrict the dumper to the registered safe classes only.
+
+    SafeDumpFile
+        and all the loader and dumper options as getter and setter methods.
+
+Configuration
+  Loader Options
+    via globals variables or as optional getter and setter methods.
+
+    $YAML::Safe::NonStrict
+        Permit certain reader errors to loosely match other YAML module
+        semantics. In detail: Allow "control characters are not allowed".
+        Note that any error is stored and returned, just not immediately.
+
+        However the reader error "invalid trailing UTF-8 octet" and all
+        other utf8 strictness violations are still fatal.
+
+        And if the structure of the YAML document cannot be parsed, i.e. a
+        required value consists only of invalid control characters, the
+        loader returns an error, unlike with non-strict YAML modules.
+
+    $YAML::Safe::LoadCode
+        Ignored. If enabled supports deparsing and evaling of code blocks.
+
+  Dumper Options
+    via globals variables or as optional getter and setter methods.
+
+    $YAML::Safe::UseCode
+        If enabled supports Dump of CV code blocks via
+        "YAML::Safe::coderef2text()".
+
+    $YAML::Safe::DumpCode
+        If enabled supports Dump of CV code blocks via
+        "YAML::Safe::coderef2text()".
+
+    $YAML::Safe::QuoteNumericStrings
+        When true (the default) strings that look like numbers but have not
+        been numified will be quoted when dumping.
+
+        This ensures leading that things like leading zeros and other
+        formatting are preserved.
+
+    $YAML::Safe::IndentlessMap
+        Default 0
+
+        Set to 1 or a true value to fallback to the old "YAML::Safe"
+        behavior to omit the indentation of map keys, which arguably
+        violates the YAML spec, is different to all other YAML libraries and
+        causes "YAML.pm" to fail.
+
+        With 0
+
+             authors:
+               - this author
+
+        With 1
+
+             authors:
+             - this author
+
+    $YAML::Safe::Indent
+        Default 2
+
+    $YAML::Safe::BestWidth
+        Default 80
+
+        Control text wrapping.
+
+    $YAML::Safe::Canonical
+        Default 1
+
+        Set to undef or 0 to disable sorting map keys.
+
+    $YAML::Safe::Unicode
+        Default 1
+
+        Set to undef or 0 to disallow unescaped non-ASCII characters.
+
+    $YAML::Safe::Encoding
+        Default utf8
+
+        Set to any, utf8, utf16le or utf16be
+
+    $YAML::Safe::LineBreak
+        Default ln
+
+        Set to any, cr, ln or crln.
+
+    $YAML::Safe::OpenEnded
+        Default 0
+
+        Set to 1 or a true value to embed the yaml into "...". If an
+        explicit document end is required.
+
+    $YAML::Safe::SafeMode
+        Default 0
+
+        Set to 1 or a true value to restrict the allowed classed only the
+        set of registered classes or tags starting with "perl/".
+
+Using YAML::Safe with Unicode
+    Handling unicode properly in Perl can be a pain. YAML::Safe only deals
+    with streams of utf8 octets. Just remember this:
+
+        $perl = Load($utf8_octets);
+        $utf8_octets = Dump($perl);
+
+    There are many, many places where things can go wrong with unicode. If
+    you are having problems, use Devel::Peek on all the possible data
+    points.
+
+See Also
+    YAML.pm
+    YAML::XS
+    YAML::Syck
+    YAML::Tiny
+    CPAN::Meta::YAML
+
+Author
+    Reini Urban <rurban@cpan.org>, based on YAML::XS by Ingy döt Net
+    <ingy@cpan.org>
+
+Copyright and License
+    Copyright 2007-2016. Ingy döt Net. Copyright 2015-2019. Reini Urban.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+    See <http://www.perl.com/perl/misc/Artistic.html>
+
