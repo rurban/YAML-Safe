@@ -1,5 +1,5 @@
-LOADER *	T_LOADER
-DUMPER *	T_DUMPER
+YAML *	T_LOADER
+YAML *	T_DUMPER
 
 INPUT
 
@@ -7,18 +7,18 @@ T_LOADER
         dMY_CXT;
 	if (!(SvROK ($arg)
            && SvOBJECT (SvRV ($arg))
-           && (sv_derived_from ($arg, \"YAML::Safe::Loader\"))
+           && (sv_derived_from ($arg, \"YAML::Safe\"))
         ))
-            croak (\"object is not of type YAML::Safe::Loader\");
+            croak (\"object is not of type YAML::Safe\");
         /**/
-        $var = (LOADER *)SvPVX (SvRV ($arg));
+        $var = (YAML *)SvPVX (SvRV ($arg));
 
 T_DUMPER
         dMY_CXT;
 	if (!(SvROK ($arg)
            && SvOBJECT (SvRV ($arg))
-           && (sv_derived_from ($arg, \"YAML::Safe::Dumper\"))
+           && (sv_derived_from ($arg, \"YAML::Safe\"))
         ))
-            croak (\"object is not of type YAML::Safe::Dumper\");
+            croak (\"object is not of type YAML::Safe\");
         /**/
-        $var = (DUMPER *)SvPVX (SvRV ($arg));
+        $var = (YAML *)SvPVX (SvRV ($arg));

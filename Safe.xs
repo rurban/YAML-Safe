@@ -1,47 +1,77 @@
 #include "perl_libyaml.h"
 
+#define MY_CXT_KEY "YAML::Safe::_cxt"
+typedef struct {
+  SV *yaml_str;
+} my_cxt_t;
+
+START_MY_CXT
+
+static void
+init_MY_CXT(pTHX_ my_cxt_t * cxt)
+{
+  cxt->yaml_str = NULL;
+}
+
 MODULE = YAML::Safe		PACKAGE = YAML::Safe
 
 PROTOTYPES: DISABLE
 
 void
-Load (yaml_string)
-        SV *yaml_string
+Load (...)
+  ALIAS:
+        Load      = 1
+        LoadFile  = 2
+        SafeLoad  = 3
+        SafeLoadFile = 4
+        Dump      = 5
+        DumpFile  = 6
+        SafeDump  = 7
+        SafeDumpFile = 8
+  PREINIT:
+	YAML *self;
+        SV *yaml_arg;
+        int ret, old_safe;
   PPCODE:
-        PL_markstack_ptr++;
-        if (!Load(yaml_string))
+        /* check if called as method or function */
+        if (items == 1 && !SvROK(ST(0)) && SvPOK(ST(0))) {
+          /* with default options */
+          self = (YAML*)calloc(1, sizeof(YAML));
+          old_safe = 0;
+          /*set_loader_options(loader);*/
+          yaml_arg = ST(0);
+          PL_markstack_ptr++;
+        } else if (items == 2 &&
+                   SvPOK(ST(1)) &&
+                   SvROK(ST(0)) &&
+                   SvOBJECT(SvRV(ST(0))) &&
+                   sv_derived_from (ST(0), "YAML::Safe")) {
+          self = (YAML*)SvPVX(SvRV(ST(0)));
+          old_safe = self->flags & F_SAFEMODE;
+          yaml_arg = ST(1);
+          PL_markstack_ptr++;
+          PL_markstack_ptr++;
+        } else {
+          croak ("Usage: (YAML::Safe*, str|io) or (str|io)");
+        }
+        /* set or unset safemode */
+        switch (ix) {
+        case 1: self->flags &= ~F_SAFEMODE; ret = Load(self, yaml_arg); break;
+        case 2: self->flags &= ~F_SAFEMODE; ret = LoadFile(self, yaml_arg); break;
+        case 3: self->flags |=  F_SAFEMODE; ret = SafeLoad(self, yaml_arg); break;
+        case 4: self->flags |=  F_SAFEMODE; ret = SafeLoadFile(self, yaml_arg); break;
+        case 5: self->flags &= ~F_SAFEMODE; ret = Dump(self); break;
+        case 6: self->flags &= ~F_SAFEMODE; ret = DumpFile(self, yaml_arg); break;
+        case 7: self->flags |=  F_SAFEMODE; ret = SafeDump(self); break;
+        case 8: self->flags |=  F_SAFEMODE; ret = SafeDumpFile(self, yaml_arg); break;
+        }
+        /* restore old safemode */
+        if (old_save) self->flags |=  F_SAFEMODE;
+        else          self->flags &= ~F_SAFEMODE;
+        if (!ret)
             XSRETURN_UNDEF;
         else
             return;
-
-void
-LoadFile (yaml_file)
-        SV *yaml_file
-  PPCODE:
-        PL_markstack_ptr++;
-        if (!LoadFile(yaml_file))
-            XSRETURN_UNDEF;
-        else
-            return;
-
-void
-Dump (...)
-  PPCODE:
-        PL_markstack_ptr++;
-        if (!Dump())
-            XSRETURN_UNDEF;
-        else
-            return;
-
-void
-DumpFile (yaml_file, ...)
-        SV *yaml_file
-  PPCODE:
-        PL_markstack_ptr++;
-        if (!DumpFile(yaml_file))
-            XSRETURN_UNDEF;
-        else
-            XSRETURN_YES;
 
 SV *
 libyaml_version()
@@ -52,3 +82,128 @@ libyaml_version()
 
     }
     OUTPUT: RETVAL
+
+BOOT:
+{
+        MY_CXT_INIT;
+        init_MY_CXT(aTHX_ &MY_CXT);
+}
+
+#ifdef USE_ITHREADS
+
+void CLONE (...)
+    PPCODE:
+        MY_CXT_CLONE; /* possible declaration */
+        init_MY_CXT(aTHX_ &MY_CXT);
+	/* skip implicit PUTBACK, returning @_ to caller, more efficient*/
+        return;
+
+#endif
+
+void END(...)
+    PREINIT:
+        dMY_CXT;
+        SV * sv;
+    PPCODE:
+        sv = MY_CXT.yaml_str;
+        MY_CXT.yaml_str = NULL;
+        SvREFCNT_dec_NN(sv);
+	/* skip implicit PUTBACK, returning @_ to caller, more efficient*/
+        return;
+
+void DESTROY (YAML *self)
+    CODE:
+        SvREFCNT_dec (self->anchors);
+        SvREFCNT_dec (self->shadows);
+        SvREFCNT_dec (self->perlio);
+        if (self->filename)
+            Safefree (self->filename);
+        if (self->parser)
+          yaml_parser_delete (self->parser);
+        if (self->event)
+          yaml_event_delete (self->event);
+        if (self->emitter)
+          yaml_emitter_delete (self->emitter);
+
+void new (char *klass)
+    PPCODE:
+        dMY_CXT;
+        SV *pv = NEWSV (0, sizeof (YAML));
+        SvPOK_only (pv);
+        yaml_init ((YAML *)SvPVX (pv));
+        mXPUSHs (sv_bless (
+           newRV_noinc (pv),
+           strEQc (klass, "YAML::Safe") ? YAML_STASH : gv_stashpv (klass, 1)
+        ));
+
+void unicode (YAML *self, int enable = 1)
+    ALIAS:
+        unicode         = F_UNICODE
+        disableblessed  = F_DISABLEBLESSED
+        enablecode      = F_ENABLECODE
+        nonstrict       = F_NONSTRICT
+        loadcode        = F_LOADCODE
+        dumpcode        = F_DUMPCODE
+        quotenum        = F_QUOTENUM
+        noindentmap     = F_NOINDENTMAP
+        canonical       = F_CANONICAL
+        openended       = F_OPENENDED
+    PPCODE:
+        if (enable)
+          self->flags |=  ix;
+        else
+          self->flags &= ~ix;
+        XPUSHs (ST (0));
+
+void get_unicode (YAML *self)
+    ALIAS:
+        get_unicode         = F_UNICODE
+        get_disableblessed  = F_DISABLEBLESSED
+        get_enablecode      = F_ENABLECODE
+        get_nonstrict       = F_NONSTRICT
+        get_loadcode        = F_LOADCODE
+        get_dumpcode        = F_DUMPCODE
+        get_quotenum        = F_QUOTENUM
+        get_noindentmap     = F_NOINDENTMAP
+        get_canonical       = F_CANONICAL
+        get_openended       = F_OPENENDED
+        get_safemode        = F_SAFEMODE
+    PPCODE:
+        XPUSHs (boolSV (self->flags & ix));
+
+void
+get_boolean (YAML *self)
+  PPCODE:
+    if (self->boolean == YAML_BOOLEAN_JSONPP)
+      XPUSHp ("JSON::PP", sizeof("JSON::PP")-1);
+    else if (self->boolean == YAML_BOOLEAN_BOOLEAN)
+      XPUSHp ("boolean", sizeof("boolean")-1);
+    else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER)
+      XPUSHp ("Types::Serialiser", sizeof("Types::Serialiser")-1);
+    else
+      XSRETURN_UNDEF;
+
+void
+boolean (YAML *self, SV *value)
+  PPCODE:
+    if (SvPOK(value)) {
+      if (strEQc(SvPVX(value), "JSON::PP")) {
+        self->boolean = YAML_BOOLEAN_JSONPP;
+      }
+      else if (strEQc(SvPVX(value), "boolean")) {
+        self->boolean = YAML_BOOLEAN_BOOLEAN;
+      }
+      else if (strEQc(SvPVX(value), "Types::Serialiser")) {
+        self->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
+      }
+      else if (strEQc(SvPVX(value), "false")) {
+        self->boolean = YAML_BOOLEAN_NONE;
+      }
+      else {
+        croak("Invalid YAML::Safe->boolean value %s", SvPVX(value));
+      }
+   } else if (SvOK(value) && !SvTRUE(value)) {
+     self->boolean = YAML_BOOLEAN_NONE;
+   } else {
+     croak("Invalid YAML::Safe->boolean value");
+   }

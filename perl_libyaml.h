@@ -32,41 +32,65 @@
 #define LOADFILEERRMSG "YAML::Safe::LoadFile Error: "
 #define DUMPERRMSG "YAML::Safe::Dump Error: "
 
+#define F_UNICODE          0x00000001
+#define F_DISABLEBLESSED   0x00000002
+#define F_ENABLECODE       0x00000004
+#define F_NONSTRICT        0x00000008
+#define F_LOADCODE         0x00000010
+#define F_DUMPCODE         0x00000020
+#define F_QUOTENUM         0x00000040
+#define F_NOINDENTMAP      0x00000080
+#define F_CANONICAL        0x00000100
+#define F_OPENENDED        0x00000200
+#define F_SAFEMODE         0x00000400
+
+typedef enum {
+    YAML_BOOLEAN_NONE = 0,
+    YAML_BOOLEAN_JSONPP,
+    YAML_BOOLEAN_BOOLEAN,
+    YAML_BOOLEAN_TYPES_SERIALISER,
+} yaml_boolean_t;
+
 typedef struct {
-    yaml_parser_t parser;
-    yaml_event_t event;
-    HV *anchors;
-    int load_code;
-    int load_bool_jsonpp;
-    int load_bool_boolean;
-    int load_blessed;
-    int document;
     char *filename;
     PerlIO *perlio;
+    yaml_parser_t *parser;
+    yaml_event_t *event;
+    yaml_emitter_t *emitter;
+    HV *anchors;
+    HV *shadows;
+    long anchor;
+    int document;
+    U32 flags;
+    yaml_boolean_t boolean;
+} YAML;
+
+typedef struct {
+    YAML yaml; /* common options */
+    yaml_parser_t parser;
+    yaml_event_t event;
+    int document;
+    HV *anchors;
 } perl_yaml_loader_t;
 
 typedef struct {
+    YAML yaml; /* common options */
     yaml_emitter_t emitter;
     long anchor;
     HV *anchors;
     HV *shadows;
-    int dump_code;
-    int dump_bool_jsonpp;
-    int dump_bool_boolean;
-    int quote_number_strings;
-    char *filename;
-    PerlIO *perlio;
 } perl_yaml_dumper_t;
 
-int
-Dump();
 
 int
-DumpFile(SV *);
+Dump(perl_yaml_dumper_t *dumper);
 
 int
-Load(SV *);
+DumpFile(perl_yaml_dumper_t *dumper, SV *);
 
 int
-LoadFile(SV *);
+Load(perl_yaml_loader_t *, SV *);
+
+int
+LoadFile(perl_yaml_loader_t *, SV *);
 

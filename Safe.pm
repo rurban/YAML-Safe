@@ -252,11 +252,11 @@ and all the loader and dumper options as getter and setter methods.
 
 =head2 Loader Options
 
-via globals variables or as optional getter and setter methods.
+via getter and setter methods.
 
 =over
 
-=item C<$YAML::Safe::NonStrict>
+=item C<nonstrict>
 
 Permit certain reader errors to loosely match other YAML module semantics. In
 detail: Allow B<"control characters are not allowed">. Note that any error is
@@ -269,7 +269,7 @@ And if the structure of the YAML document cannot be parsed, i.e. a required
 value consists only of invalid control characters, the loader returns an
 error, unlike with non-strict YAML modules.
 
-=item C<$YAML::Safe::LoadCode>
+=item C<load_code>
 
 Ignored. If enabled supports deparsing and evaling of code blocks.
 

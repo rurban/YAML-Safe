@@ -51,6 +51,37 @@ yaml_perlio_read_handler(void *data, unsigned char *buffer, size_t size, size_t 
 static int
 yaml_perlio_write_handler(void *data, unsigned char *buffer, size_t size);
 
+#if 0
+static const char* options[] =
+  {
+   /* Both */
+   "boolean",         /* "JSON::PP", "boolean", "Types::Serialiser" or 0 */
+   "disableblessed",  /* bool, default: 0 */
+   "enablecode",      /* bool, default: 0 */
+   /* Loader */
+   "nonstrict",       /* bool, default: 0 */
+   "loadcode",        /* bool, default: 0 */
+   /* Dumper */
+   "dumpcode",        /* bool, default: 0 */
+   "quotenum",        /* bool, default: 0 */
+   "noindentmap",     /* bool, default: 0 */
+   "indent",          /* int, default: 2 */
+   "wrapwidth",       /* int, default: 80 */
+   "canonical",       /* bool, default: 0 */
+   "unicode",         /* bool, default: 1 */
+   "encoding",        /* "any", "utf8", "utf16le" or "utf16be" */
+   "linebreak",       /* "any", "cr", "ln" or "crln" */
+   "openended",       /* bool, default: 0 */
+  };
+static int numoptions = sizeof(options)/sizeof(options[0]);
+#endif
+
+INLINE void
+yaml_init (YAML *yaml)
+{
+  Zero (yaml, 1, YAML);
+}
+
 static SV *
 fold_results(I32 count)
 {
@@ -177,23 +208,23 @@ set_loader_options(perl_yaml_loader_t *loader)
     yaml_encoding_t result = YAML_UTF8_ENCODING;
     char* boolean = "";
 
-    /* As with YAML::Tiny. Default: strict Load */
-    gv = gv_fetchpv("YAML::Safe::NonStrict", TRUE, SVt_PV);
-    loader->parser.problem_nonstrict = gv && SvTRUE(GvSV(gv)) ? 1 : 0;
     loader->document = 0;
     loader->filename = NULL;
 
+    /* As with YAML::Tiny. Default: strict Load */
+    gv = gv_fetchpv("YAML::Safe::NonStrict", TRUE, SVt_PV);
+    loader->parser.problem_nonstrict = gv && SvTRUE(GvSV(gv)) ? 1 : 0;
+
     gv = gv_fetchpv("YAML::Safe::Boolean", FALSE, SVt_PV);
-    loader->load_bool_jsonpp = 0;
-    loader->load_bool_boolean = 0;
+    loader->yaml.boolean = YAML_BOOLEAN_NONE;
     if (SvTRUE(GvSV(gv))) {
         boolean = SvPV_nolen(GvSV(gv));
         if (strEQc(boolean, "JSON::PP")) {
-            loader->load_bool_jsonpp = 1;
+            loader->yaml.boolean = YAML_BOOLEAN_JSONPP;
             load_module(PERL_LOADMOD_NOIMPORT, newSVpv("JSON::PP", 0), Nullsv);
         }
         else if (strEQc(boolean, "boolean")) {
-            loader->load_bool_boolean = 1;
+            loader->yaml.boolean = YAML_BOOLEAN_BOOLEAN;
             load_module(PERL_LOADMOD_NOIMPORT, newSVpv("boolean", 0), Nullsv);
         }
         else {
@@ -202,7 +233,7 @@ set_loader_options(perl_yaml_loader_t *loader)
         }
     }
 
-    loader->load_code = (
+    loader->enable_code = (
         ((gv = gv_fetchpv("YAML::Safe::UseCode", TRUE, SVt_PV)) &&
         SvTRUE(GvSV(gv)))
     ||
@@ -210,11 +241,11 @@ set_loader_options(perl_yaml_loader_t *loader)
         SvTRUE(GvSV(gv)))
     );
 
-    loader->load_blessed = 1;
+    loader->yaml.load_blessed = 1;
     gv = gv_fetchpv("YAML::Safe::LoadBlessed", FALSE, SVt_PV);
     if (SvOK(GvSV(gv))) {
         if (! SvTRUE(GvSV(gv))) {
-            loader->load_blessed = 0;
+            loader->yaml.load_blessed = 0;
         }
     }
 
@@ -314,30 +345,29 @@ load_error:
  * It takes a file or filename and turns it into 0 or more Perl objects.
  */
 int
-LoadFile(SV *sv_file)
+LoadFile(YAML *self, SV *sv_file)
 {
-    perl_yaml_loader_t loader;
     FILE *file = NULL;
     const char *fname;
     STRLEN len;
     int ret;
 
-    yaml_parser_initialize(&loader.parser);
-    (void)set_loader_options(&loader);
+    yaml_parser_initialize(&loader->parser);
+    /* (void)set_loader_options(loader); */
 
     if (SvROK(sv_file)) { /* pv mg or io or gv */
         SV *rv = SvRV(sv_file);
 
         if (SvTYPE(rv) == SVt_PVIO) {
-            loader.perlio = IoIFP(rv);
-            yaml_parser_set_input(&loader.parser,
+            loader->yaml.perlio = IoIFP(rv);
+            yaml_parser_set_input(&loader->parser,
                                   &yaml_perlio_read_handler,
-                                  &loader);
+                                  loader);
         } else if (SvTYPE(rv) == SVt_PVGV && GvIO(rv)) {
-            loader.perlio = IoIFP(GvIOp(rv));
-            yaml_parser_set_input(&loader.parser,
+            loader->yaml.perlio = IoIFP(GvIOp(rv));
+            yaml_parser_set_input(&loader->parser,
                                   &yaml_perlio_read_handler,
-                                  &loader);
+                                  loader);
         } else if (SvMAGIC(rv)) {
             mg_get(rv);
             fname = SvPV_const(rv, len);
@@ -358,25 +388,25 @@ LoadFile(SV *sv_file)
             croak("Can't open '%s' for input", fname);
             return 0;
         }
-        loader.filename = (char *)fname;
-        yaml_parser_set_input_file(&loader.parser, file);
+        loader->filename = (char *)fname;
+        yaml_parser_set_input_file(&loader->parser, file);
     } else if (SvTYPE(sv_file) == SVt_PVIO) {
-        loader.perlio = IoIFP(sv_file);
-        yaml_parser_set_input(&loader.parser,
+        loader->yaml.perlio = IoIFP(sv_file);
+        yaml_parser_set_input(&loader->parser,
                               &yaml_perlio_read_handler,
-                              &loader);
+                              loader);
     } else if (SvTYPE(sv_file) == SVt_PVGV
                && GvIO(sv_file)) {
-        loader.perlio = IoIFP(GvIOp(sv_file));
-        yaml_parser_set_input(&loader.parser,
+        loader->yaml.perlio = IoIFP(GvIOp(sv_file));
+        yaml_parser_set_input(&loader->parser,
                               &yaml_perlio_read_handler,
-                              &loader);
+                              loader);
     } else {
         croak("Invalid argument type: %u", SvTYPE(sv_file));
         return 0;
     }
 
-    ret = load_impl(&loader);
+    ret = load_impl(loader);
     if (file)
         fclose(file);
     else if (SvTYPE(sv_file) == SVt_PVIO)
@@ -389,27 +419,25 @@ LoadFile(SV *sv_file)
  * It takes a yaml stream and turns it into 0 or more Perl objects.
  */
 int
-Load(SV *yaml_sv)
+Load(YAML *self, SV *yaml_sv)
 {
-    perl_yaml_loader_t loader;
     const unsigned char *yaml_str;
     STRLEN yaml_len;
 
     yaml_str = (const unsigned char *)SvPV_const(yaml_sv, yaml_len);
-
-    yaml_parser_initialize(&loader.parser);
-    (void)set_loader_options(&loader);
+    yaml_parser_initialize(&loader->parser);
+    /*(void)set_loader_options(&loader);*/
     if (DO_UTF8(yaml_sv)) { /* overrides $YAML::Safe::Encoding */
-        loader.parser.encoding = YAML_UTF8_ENCODING;
+        loader->parser.encoding = YAML_UTF8_ENCODING;
     } /* else check the BOM. don't check for decoded utf8. */
 
     yaml_parser_set_input_string(
-        &loader.parser,
+        &loader->parser,
         yaml_str,
         yaml_len
     );
 
-    return load_impl(&loader);
+    return load_impl(loader);
 }
 
 /*
@@ -663,15 +691,17 @@ load_scalar(perl_yaml_loader_t *loader)
             return scalar;
         }
         else if (strEQc(string, "true")) {
-            if (loader->load_bool_jsonpp) {
+            if (loader->boolean == YAML_BOOLEAN_JSONPP) {
                 char *name = "JSON::PP::Boolean";
-                scalar = newSV(1);
-                scalar = sv_setref_iv(scalar, name, 1);
+                scalar = sv_setref_iv(newSV(0), name, 1);
             }
-            else if (loader->load_bool_boolean) {
+            else if (loader->boolean == YAML_BOOLEAN_BOOLEAN) {
                 char *name = "boolean";
-                scalar = newSV(1);
-                scalar = sv_setref_iv(scalar, name, 1);
+                scalar = sv_setref_iv(newSV(0), name, 1);
+            }
+            else if (loader->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
+                char *name = "Types::Serialiser";
+                scalar = sv_setref_iv(newSV(0), name, 1);
             }
             else {
                 scalar = &PL_sv_yes;
@@ -681,14 +711,19 @@ load_scalar(perl_yaml_loader_t *loader)
             return scalar;
         }
         else if (strEQc(string, "false")) {
-            if (loader->load_bool_jsonpp) {
+            if (loader->boolean == YAML_BOOLEAN_JSONPP) {
                 char *name = "JSON::PP::Boolean";
-                scalar = newSV(1);
+                scalar = newSV(0);
                 scalar = sv_setref_iv(scalar, name, 0);
             }
-            else if (loader->load_bool_boolean) {
+            else if (loader->boolean == YAML_BOOLEAN_BOOLEAN) {
                 char *name = "boolean";
-                scalar = newSV(1);
+                scalar = newSV(0);
+                scalar = sv_setref_iv(scalar, name, 0);
+            }
+            else if (loader->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
+                char *name = "Types::Serialiser";
+                scalar = newSV(0);
                 scalar = sv_setref_iv(scalar, name, 0);
             }
             else {
@@ -772,7 +807,7 @@ load_code(perl_yaml_loader_t * loader)
 
     code = newSVpvn(string, length);
     SvUTF8_on(code);
-    if (! loader->load_code) {
+    if (! loader->enable_code) {
         string = "{}";
         length = 2;
     }
@@ -858,19 +893,18 @@ set_dumper_options(perl_yaml_dumper_t *dumper)
     char* boolean = "";
     SV* indent;
 
-    dumper->dump_code = (
+    dumper->filename = NULL;
+    dumper->enable_code = (
         ((gv = gv_fetchpv("YAML::Safe::UseCode", GV_NOADD_NOINIT, SVt_IV))
          && SvTRUE(GvSV(gv)))
     ||
         ((gv = gv_fetchpv("YAML::Safe::DumpCode", GV_NOADD_NOINIT, SVt_IV)) &&
         SvTRUE(GvSV(gv)))
     );
-    dumper->quote_number_strings = (
+    dumper->quotenum = (
         ((gv = gv_fetchpv("YAML::Safe::QuoteNumericStrings", GV_NOADD_NOINIT, SVt_IV)) &&
         SvTRUE(GvSV(gv)))
     );
-
-    dumper->filename = NULL;
 
     /* Set if unescaped non-ASCII characters are allowed. */
     indent = get_sv("YAML::Safe::Indent", GV_NOADD_NOINIT);
@@ -919,21 +953,23 @@ set_dumper_options(perl_yaml_dumper_t *dumper)
     }
 
     gv = gv_fetchpv("YAML::Safe::Boolean", FALSE, SVt_PV);
-    dumper->dump_bool_jsonpp = 0;
-    dumper->dump_bool_boolean = 0;
+    dumper->boolean = YAML_BOOLEAN_NONE;
     if (SvTRUE(GvSV(gv))) {
         boolean = SvPV_nolen(GvSV(gv));
         if (strEQc(boolean, "JSON::PP")) {
-            dumper->dump_bool_jsonpp = 1;
-            load_module(PERL_LOADMOD_NOIMPORT, newSVpv("JSON::PP", 0), Nullsv);
+            dumper->boolean = YAML_BOOLEAN_JSONPP;
+            load_module(PERL_LOADMOD_NOIMPORT, newSVpv(boolean, 0), Nullsv);
         }
         else if (strEQc(boolean, "boolean")) {
-            dumper->dump_bool_boolean = 1;
-            load_module(PERL_LOADMOD_NOIMPORT, newSVpv("boolean", 0), Nullsv);
+            dumper->boolean = YAML_BOOLEAN_BOOLEAN;
+            load_module(PERL_LOADMOD_NOIMPORT, newSVpv(boolean, 0), Nullsv);
+        }
+        else if (strEQc(boolean, "Types::Serialiser")) {
+            dumper->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
+            load_module(PERL_LOADMOD_NOIMPORT, newSVpv(boolean, 0), Nullsv);
         }
         else {
-            croak("%s",
-                "$YAML::Safe::Boolean only accepts 'JSON::PP', 'boolean' or a false value");
+            croak("Invalid $YAML::Safe::Boolean value %s", boolean);
         }
     }
 
@@ -959,10 +995,9 @@ set_dumper_options(perl_yaml_dumper_t *dumper)
  * Does take options only via globals.
  */
 int
-Dump()
+Dump(perl_yaml_dumper_t *dumper)
 {
     dXSARGS;
-    perl_yaml_dumper_t dumper;
     yaml_event_t event_stream_start;
     yaml_event_t event_stream_end;
     yaml_encoding_t encoding;
@@ -972,34 +1007,34 @@ Dump()
     sp = mark;
 
     /* Set up the emitter object and begin emitting */
-    yaml_emitter_initialize(&dumper.emitter);
-    encoding = set_dumper_options(&dumper);
+    yaml_emitter_initialize(&dumper->emitter);
+    /*encoding = set_dumper_options(dumper);*/
     yaml_emitter_set_output(
-        &dumper.emitter,
+        &dumper->emitter,
         &append_output,
         (void *)yaml
     );
 
     yaml_stream_start_event_initialize(&event_stream_start, encoding);
-    yaml_emitter_emit(&dumper.emitter, &event_stream_start);
+    yaml_emitter_emit(&dumper->emitter, &event_stream_start);
 
-    dumper.anchors = (HV *)sv_2mortal((SV *)newHV());
-    dumper.shadows = (HV *)sv_2mortal((SV *)newHV());
+    dumper->anchors = (HV *)sv_2mortal((SV *)newHV());
+    dumper->shadows = (HV *)sv_2mortal((SV *)newHV());
 
     for (i = 0; i < items; i++) {
-        dumper.anchor = 0;
+        dumper->anchor = 0;
 
-        dump_prewalk(&dumper, ST(i));
-        dump_document(&dumper, ST(i));
+        dump_prewalk(dumper, ST(i));
+        dump_document(dumper, ST(i));
 
-        hv_clear(dumper.anchors);
-        hv_clear(dumper.shadows);
+        hv_clear(dumper->anchors);
+        hv_clear(dumper->shadows);
     }
 
     /* End emitting and destroy the emitter object */
     yaml_stream_end_event_initialize(&event_stream_end);
-    yaml_emitter_emit(&dumper.emitter, &event_stream_end);
-    yaml_emitter_delete(&dumper.emitter);
+    yaml_emitter_emit(&dumper->emitter, &event_stream_end);
+    yaml_emitter_delete(&dumper->emitter);
 
     /* Put the YAML stream scalar on the XS output stack */
     if (yaml) {
@@ -1017,10 +1052,9 @@ Dump()
  * Dump zero or more Perl objects into the file
  */
 int
-DumpFile(SV *sv_file)
+DumpFile(perl_yaml_dumper_t *dumper, SV *sv_file)
 {
     dXSARGS;
-    perl_yaml_dumper_t dumper;
     yaml_event_t event_stream_start;
     yaml_event_t event_stream_end;
     yaml_encoding_t encoding;
@@ -1031,22 +1065,22 @@ DumpFile(SV *sv_file)
 
     sp = mark;
 
-    yaml_emitter_initialize(&dumper.emitter);
-    encoding = set_dumper_options(&dumper);
+    yaml_emitter_initialize(&dumper->emitter);
+    /*encoding = set_dumper_options(dumper);*/
 
     if (SvROK(sv_file)) { /* pv mg or io or gv */
         SV *rv = SvRV(sv_file);
 
         if (SvTYPE(rv) == SVt_PVIO) {
-            dumper.perlio = IoOFP(rv);
-            yaml_emitter_set_output(&dumper.emitter,
+            dumper->yaml.perlio = IoOFP(rv);
+            yaml_emitter_set_output(&dumper->emitter,
                                     &yaml_perlio_write_handler,
-                                    &dumper);
+                                    dumper);
         } else if (SvTYPE(rv) == SVt_PVGV && GvIO(rv)) {
-            dumper.perlio = IoOFP(GvIOp(SvRV(sv_file)));
-            yaml_emitter_set_output(&dumper.emitter,
+            dumper->yaml.perlio = IoOFP(GvIOp(SvRV(sv_file)));
+            yaml_emitter_set_output(&dumper->emitter,
                                     &yaml_perlio_write_handler,
-                                    &dumper);
+                                    dumper);
         } else if (SvMAGIC(rv)) {
             mg_get(rv);
             fname = SvPV_const(rv, len);
@@ -1067,50 +1101,50 @@ DumpFile(SV *sv_file)
             croak("Can't open '%s' for output", fname);
             return 0;
         }
-        dumper.filename = (char *)fname;
-        yaml_emitter_set_output_file(&dumper.emitter, file);
+        dumper->yaml.filename = (char *)fname;
+        yaml_emitter_set_output_file(&dumper->emitter, file);
     } else if (SvTYPE(sv_file) == SVt_PVIO) {
-        dumper.perlio = IoOFP(sv_file);
-        yaml_emitter_set_output(&dumper.emitter,
+        dumper->yaml.perlio = IoOFP(sv_file);
+        yaml_emitter_set_output(&dumper->emitter,
                                 &yaml_perlio_write_handler,
-                                &dumper);
+                                dumper);
     } else if (SvTYPE(sv_file) == SVt_PVGV && GvIO(sv_file)) {
-        dumper.perlio = IoOFP(GvIOp(sv_file));
-        yaml_emitter_set_output(&dumper.emitter,
+        dumper->yaml.perlio = IoOFP(GvIOp(sv_file));
+        yaml_emitter_set_output(&dumper->emitter,
                                 &yaml_perlio_write_handler,
-                                &dumper);
+                                dumper);
     } else {
         croak("Invalid argument type: %u", SvTYPE(sv_file));
         return 0;
     }
 
     yaml_stream_start_event_initialize(&event_stream_start, encoding);
-    if (!yaml_emitter_emit(&dumper.emitter, &event_stream_start)) {
+    if (!yaml_emitter_emit(&dumper->emitter, &event_stream_start)) {
         PUTBACK;
         return 0;
     }
 
-    dumper.anchors = (HV *)sv_2mortal((SV *)newHV());
-    dumper.shadows = (HV *)sv_2mortal((SV *)newHV());
+    dumper->anchors = (HV *)sv_2mortal((SV *)newHV());
+    dumper->shadows = (HV *)sv_2mortal((SV *)newHV());
 
     /* ST(0) is the file */
     for (i = 1; i < items; i++) {
-        dumper.anchor = 0;
+        dumper->anchor = 0;
 
         dump_prewalk(&dumper, ST(i));
         dump_document(&dumper, ST(i));
 
-        hv_clear(dumper.anchors);
-        hv_clear(dumper.shadows);
+        hv_clear(dumper->anchors);
+        hv_clear(dumper->shadows);
     }
 
     /* End emitting and destroy the emitter object */
     yaml_stream_end_event_initialize(&event_stream_end);
-    if (!yaml_emitter_emit(&dumper.emitter, &event_stream_end)) {
+    if (!yaml_emitter_emit(&dumper->emitter, &event_stream_end)) {
         PUTBACK;
         return 0;
     }
-    yaml_emitter_delete(&dumper.emitter);
+    yaml_emitter_delete(&dumper->emitter);
     if (file)
         fclose(file);
     else if (SvTYPE(sv_file) == SVt_PVIO)
@@ -1240,8 +1274,7 @@ dump_node(perl_yaml_dumper_t *dumper, SV *node)
             }
             else {
                 klass = sv_reftype(rnode, TRUE);
-                if ((dumper->dump_bool_jsonpp && strEQc(klass, "JSON::PP::Boolean"))
-                 || (dumper->dump_bool_boolean && strEQc(klass, "boolean"))) {
+                if (dumper->yaml.boolean != YAML_BOOLEAN_NONE) {
                     if (SvIV(node)) {
                         dump_scalar(dumper, &PL_sv_yes, NULL);
                     }
@@ -1460,7 +1493,7 @@ dump_scalar(perl_yaml_dumper_t *dumper, SV *node, yaml_char_t *tag)
             strEQc(string, "false") ||
             strEQc(string, "null") ||
             (SvTYPE(node_clone) >= SVt_PVGV) ||
-            ( dumper->quote_number_strings && !SvNIOK(node_clone) && looks_like_number(node_clone) )
+            ( dumper->quotenum && !SvNIOK(node_clone) && looks_like_number(node_clone) )
         ) {
             style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
         } else {
@@ -1500,7 +1533,7 @@ dump_code(perl_yaml_dumper_t *dumper, SV *node)
     yaml_char_t *tag;
     yaml_scalar_style_t style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
     char *string = "{ \"DUMMY\" }";
-    if (dumper->dump_code) {
+    if (dumper->enable_code) {
         /* load_module(PERL_LOADMOD_NOIMPORT, newSVpv("B::Deparse", 0), NULL);
          */
         SV *result;
@@ -1591,15 +1624,15 @@ yaml_perlio_read_handler(void *data, unsigned char *buffer, size_t size, size_t 
 {
     perl_yaml_loader_t *loader = (perl_yaml_loader_t *)data;
 
-    *size_read = PerlIO_read(loader->perlio, buffer, size);
-    return !PerlIO_error(loader->perlio);
+    *size_read = PerlIO_read(loader->yaml.perlio, buffer, size);
+    return !PerlIO_error(loader->yaml.perlio);
 }
 
 static int
 yaml_perlio_write_handler(void *data, unsigned char *buffer, size_t size)
 {
     perl_yaml_dumper_t *dumper = (perl_yaml_dumper_t *)data;
-    return (PerlIO_write(dumper->perlio, (char*)buffer, (long)size) == (SSize_t)size);
+    return (PerlIO_write(dumper->yaml.perlio, (char*)buffer, (long)size) == (SSize_t)size);
 }
 
 /* XXX Make -Wall not complain about 'local_patches' not being used. */
