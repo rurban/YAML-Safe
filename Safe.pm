@@ -3,21 +3,20 @@ use strict; use warnings;
 package YAML::Safe;
 our $VERSION = '0.80';
 our $XS_VERSION = $VERSION;
-# $VERSION = eval $VERSION;
+$VERSION = eval $VERSION;
 
 use base 'Exporter';
-@YAML::Safe::EXPORT = qw(Load Dump LoadFile DumpFile);
-#@YAML::Safe::EXPORT_OK = qw();
+@YAML::Safe::EXPORT = qw(Load Dump);
+@YAML::Safe::EXPORT_OK = qw(LoadFile DumpFile);
 %YAML::Safe::EXPORT_TAGS = (
     all => [qw(Dump Load LoadFile DumpFile)],
 );
-our ($UseCode, $DumpCode, $LoadCode, $Boolean, $LoadBlessed, $Indent);
+# our ($UseCode, $DumpCode, $LoadCode, $Boolean, $LoadBlessed, $Indent);
 # $YAML::Safe::NonStrict = 1; # for Load
 # $YAML::Safe::UseCode = 0;   # for Dump
 # $YAML::Safe::DumpCode = 0;  # for Dump
 # $YAML::Safe::LoadCode = 0;  # for Load. ignored
-
-$YAML::Safe::QuoteNumericStrings = 1;
+# $YAML::Safe::QuoteNumericStrings = 1;
 
 use XSLoader;
 use Scalar::Util qw/ openhandle /;
@@ -154,25 +153,31 @@ YAML::Safe - Safe Perl YAML Serialization using XS and libyaml
 
 =head1 Synopsis
 
-    use YAML::Safe;
+    use YAML::Safe qw(LoadFile DumpFile);
 
-    my $yaml = Dump [ 1..4 ];
+    my $yaml  = Dump [ 1..4 ];
     my $array = Load $yaml;
 
-    my $yaml = DumpFile ("my.yml", [ 1..4 ]);
-    my $array = LoadFile "my.yml";
+    $yaml  = DumpFile ("my.yml", [ 1..4 ]);
+    $array = LoadFile "my.yml";
+    open my $fh, "my.yml";
+    $yaml  = DumpFile ($fh, [ 1..4 ]);
+    $array = LoadFile $fh;
+    open *FH, "my.yml";
+    $yaml  = DumpFile (*FH, [ 1..4 ]);
+    $array = LoadFile *FH;
 
-    my $yaml = new YAML::Safe;
-    $yaml->NonStrict(1);
-    $yaml->Encoding("any");
-    $yaml->SafeClass("DateTime");
-    my $array = $yaml->SafeLoadFile("META.yml");
+    my $obj = YAML::Safe->new;
+    $yaml  = $obj->DumpFile ("my.yml", [ 1..4 ]);
+    $array = $obj->LoadFile("my.yml");
 
-    my $yaml = new YAML::Safe;
-    $yaml->Canonical(1);
-    $yaml->Unicode(1);
+    $yaml = YAML::Safe->new->nonstrict->encoding("any");
     $yaml->SafeClass("DateTime");
-    my $array = $yaml->SafeDumpFile("META.yml");
+    $array = $yaml->SafeLoadFile("META.yml");
+
+    $yaml = YAML::Safe->new;
+    $yaml->SafeClass("DateTime");
+    $array = $yaml->SafeDumpFile("META.yml");
 
 =head1 Description
 
@@ -186,22 +191,24 @@ This module is a refactoring of L<YAML::XS>, the old Perl XS binding to
 libyaml which offers Perl somewhat acceptable YAML support to date.
 YAML::XS never produced code which could be read from YAML, and thus
 was unsuitable to be used as YAML replacement for core and CPAN.
+It also required reading and setting options from global variables.
 
-This module exports the functions C<Dump>, C<Load>, C<DumpFile> and
-C<LoadFile>. These functions are intended to work exactly like L<YAML::XS>
-and C<YAML.pm>'s corresponding functions.
+This module exports the functions C<Dump> and C<Load>, and do work as
+functions exactly like L<YAML::XS> and C<YAML.pm>'s corresponding
+functions.  It is however preferred to use the new OO-interface to
+store all options in the new created object. YAML::Safe does not
+support the old globals anymore.
 
-There are also new Safe variants of Load and Dump methods, and the
-possibility to create a YAML object, set options as setter methods and
-call the Safe methods.
+There are also new Safe variants of Load and Dump methods, and set
+options as setter methods and call the Safe methods.
 
-If you set the option C<$YAML::Safe::IndentlessMap> to 0 or undef,
-C<YAML::Safe> will behave like with version E<lt> 0.70, which creates
-yml files which cannot be read by C<YAML.pm>
+If you set the option C<noindentmap>, C<YAML::Safe> will behave like
+with version E<lt> 0.70, which creates yml files which cannot be read
+by C<YAML.pm>
 
 However the loader is stricter than C<YAML>, C<YAML::Syck> and
-C<CPAN::Meta::YAML> i.e. C<YAML::Tiny> as used in core. Set the variable
-C<$YAML::Safe::NonStrict> to allow certain reader errors to pass the
+C<CPAN::Meta::YAML> i.e. C<YAML::Tiny> as used in core. Set the option
+C<nonstrict> to allow certain reader errors to pass the
 C<CPAN::Meta> validation testsuite.
 
 =head1 FUNCTIONS
@@ -216,6 +223,8 @@ C<CPAN::Meta> validation testsuite.
 
 =item DumpFile
 
+=item libyaml_version
+
 =back
 
 =head1 METHODS
@@ -228,27 +237,56 @@ Create a YAML loader or dumper object with some options.
 
 =item SafeClass "classname", ...
 
-Add a string or list of strings to the list of allowed classes to the
+Register a string or list of strings to the list of allowed classes to the
 C<Safe{Load,Dump}> methods. Without any SafeClass added, no custom C<!>
 classes are allow in the YAML.
+Regexp are not supported.
 
 =item SafeLoad
 
-Restrict the loader to the registered safe classes only.
-
 =item SafeLoadFile
+
+Restrict the loader to the registered safe classes only
+or tags starting with "perl/".
 
 =item SafeDump
 
-Restrict the dumper to the registered safe classes only.
-
 =item SafeDumpFile
 
-and all the loader and dumper options as getter and setter methods.
+Restrict the dumper to the registered safe classes only
+or tags starting with "perl/".
 
 =back
 
+And all the loader and dumper options as getter and setter methods.
+See below.
+
 =head1 Configuration
+
+=head2 Options for Loader and Dumper
+
+via getter and setter methods.
+
+=over
+
+=item C<enablecode>
+
+Turns on handling of code blocks.
+
+=item C<encoding>
+
+Default utf8
+
+Set to any, utf8, utf16le or utf16be
+
+=item C<safemode>
+
+Default 0
+
+Set to 1 or use the Safe methodsa to restrict the allowed classed only
+the set of registered classes or tags starting with "perl/".
+
+=back
 
 =head2 Loader Options
 
@@ -269,9 +307,9 @@ And if the structure of the YAML document cannot be parsed, i.e. a required
 value consists only of invalid control characters, the loader returns an
 error, unlike with non-strict YAML modules.
 
-=item C<load_code>
+=item C<loadcode>
 
-Ignored. If enabled supports deparsing and evaling of code blocks.
+Turns on deparsing and evaling of code blocks in the loader.
 
 =back
 
@@ -281,15 +319,11 @@ via globals variables or as optional getter and setter methods.
 
 =over
 
-=item C<$YAML::Safe::UseCode>
+=item C<dumpcode>
 
 If enabled supports Dump of CV code blocks via C<YAML::Safe::coderef2text()>.
 
-=item C<$YAML::Safe::DumpCode>
-
-If enabled supports Dump of CV code blocks via C<YAML::Safe::coderef2text()>.
-
-=item C<$YAML::Safe::QuoteNumericStrings>
+=item C<quotenum>
 
 When true (the default) strings that look like numbers but have not been
 numified will be quoted when dumping.
@@ -297,71 +331,54 @@ numified will be quoted when dumping.
 This ensures leading that things like leading zeros and other formatting are
 preserved.
 
-=item C<$YAML::Safe::IndentlessMap>
+=item C<noindentmap>
 
-Default 0
-
-Set to 1 or a true value to fallback to the old C<YAML::Safe> behavior to omit
+If enabled fallback to the old C<YAML::Safe> behavior to omit
 the indentation of map keys, which arguably violates the YAML spec, is
 different to all other YAML libraries and causes C<YAML.pm> to fail.
 
-With 0
+Disabled
 
      authors:
        - this author
 
-With 1
+Enabled
 
      authors:
      - this author
 
-=item C<$YAML::Safe::Indent>
+=item C<indent>
 
 Default 2
 
-=item C<$YAML::Safe::BestWidth>
+=item C<wrapwidth>
 
 Default 80
 
 Control text wrapping.
 
-=item C<$YAML::Safe::Canonical>
-
-Default 1
+=item C<canonical>
 
 Set to undef or 0 to disable sorting map keys.
 
-=item C<$YAML::Safe::Unicode>
+=item C<unicode>
 
 Default 1
 
 Set to undef or 0 to disallow unescaped non-ASCII characters.
 
-=item C<$YAML::Safe::Encoding>
-
-Default utf8
-
-Set to any, utf8, utf16le or utf16be
-
-=item C<$YAML::Safe::LineBreak>
+=item C<linebreak>
 
 Default ln
 
 Set to any, cr, ln or crln.
 
-=item C<$YAML::Safe::OpenEnded>
+=item C<openended>
 
 Default 0
 
 Set to 1 or a true value to embed the yaml into "...". If an explicit document
 end is required.
-
-=item C<$YAML::Safe::SafeMode>
-
-Default 0
-
-Set to 1 or a true value to restrict the allowed classed only the set of
-registered classes or tags starting with "perl/".
 
 =back
 

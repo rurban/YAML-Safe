@@ -35,14 +35,14 @@ Load (...)
         int err = 0;
   PPCODE:
         /* check if called as method or function */
-          if (items == 1 &&
-              ((!SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
-               (ix == 5 && SvROK(ST(0))))) {     /* Dump */
+        if ((items == 1 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
+            (ix >= 5 && ix <= 6 && SvROK(ST(0)))) {  /* Dump */
           /* default options */
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
           yaml_arg = ST(0);
-          PL_markstack_ptr++;
+          if (ix >= 5 && ix <= 6 && SvROK(ST(0)))
+            PL_markstack_ptr++;
         } else if (items >= 2 &&
                    SvOK(ST(1)) &&
                    SvROK(ST(0)) &&
@@ -51,7 +51,6 @@ Load (...)
           self = (YAML*)SvPVX(SvRV(ST(0)));
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
-          PL_markstack_ptr++;
           PL_markstack_ptr++;
         } else {
           err = 1;
@@ -80,7 +79,7 @@ Load (...)
                 break;
         case 5: self->flags &= ~F_SAFEMODE;
                 if (err)
-                  croak ("Usage: Dump(YAML::Safe*, ...) or Dump(...)");
+                  croak ("Usage: Dump(YAML::Safe*, ...) or Dump(ref)");
                 ret = Dump(self);
                 break;
         case 6: self->flags &= ~F_SAFEMODE;
@@ -133,7 +132,7 @@ void CLONE (...)
 
 #endif
 
-void END(...)
+void xxxEND(...)
     PREINIT:
         dMY_CXT;
         SV * sv;

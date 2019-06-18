@@ -1,6 +1,8 @@
-use t::TestYAMLTests tests => 10;
+use FindBin '$Bin';
+use lib $Bin;
+use TestYAMLTests tests => 10;
 no warnings 'once';
-$YAML::Safe::IndentlessMap = 1;
+my $o = YAML::Safe->new->noindentmap;
 
 filters {
     perl => 'eval',
@@ -23,7 +25,7 @@ is ref($hash2->{one}), 'BigList',
 is ref($hash2->{two}), 'BigList',
     "Object at 'two' is blessed 'BigList'";
 
-my $yaml = Dump($hash2);
+my $yaml = $o->Dump($hash2);
 
 is $yaml, $test->yaml_dump, "Dumping " . $test->name . " works";
 
@@ -41,7 +43,7 @@ is ref($array2->[0]), 'Blessed',
 like "$array2->[0]", qr/=SCALAR\(/,
     "Got a scalar ref";
 
-$yaml = Dump($array2);
+$yaml = $o->Dump($array2);
 
 is $yaml, $test->yaml_dump, "Dumping " . $test->name . " works";
 

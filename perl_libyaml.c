@@ -1005,7 +1005,7 @@ DumpFile(YAML *self, SV *sv_file)
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
     self->shadows = (HV *)sv_2mortal((SV *)newHV());
 
-    /* ST(0) is the file */
+    /* ST(1) is the file */
     for (i = 1; i < items; i++) {
         self->anchor = 0;
 
