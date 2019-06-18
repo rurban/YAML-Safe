@@ -2,7 +2,6 @@
 api.c
 Changes
 config.h
-CONTRIBUTING.md
 dumper.c
 emitter.c
 loader.c
