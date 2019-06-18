@@ -62,6 +62,7 @@ typedef struct {
     long anchor;
     int document;
     U32 flags;
+    yaml_encoding_t encoding;
     yaml_boolean_t boolean;
 } YAML;
 

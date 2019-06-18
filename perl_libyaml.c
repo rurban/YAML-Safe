@@ -207,6 +207,8 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
     self->document = 0;
     self->filename = NULL;
 
+    if (self->encoding)
+        self->parser->encoding = self->encoding;
     /* As with YAML::Tiny. Default: strict Load */
     parser->problem_nonstrict = self->flags & F_NONSTRICT;
 }
@@ -394,7 +396,7 @@ Load(YAML *self, SV *yaml_sv)
     yaml_parser_initialize(self->parser);
     set_parser_options(self, self->parser);
     if (DO_UTF8(yaml_sv)) { /* overrides encoding setting */
-      if (self->parser->encoding == YAML_ANY_ENCODING)
+      if (self->encoding == YAML_ANY_ENCODING)
         self->parser->encoding = YAML_UTF8_ENCODING;
     } /* else check the BOM. don't check for decoded utf8. */
 
@@ -888,7 +890,7 @@ Dump(YAML *self)
         (void *)yaml
     );
 
-    yaml_stream_start_event_initialize(&event_stream_start, self->parser->encoding);
+    yaml_stream_start_event_initialize(&event_stream_start, self->encoding);
     yaml_emitter_emit(self->emitter, &event_stream_start);
 
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
@@ -994,7 +996,7 @@ DumpFile(YAML *self, SV *sv_file)
     }
 
     yaml_stream_start_event_initialize(&event_stream_start,
-                                       self->parser->encoding);
+                                       self->encoding);
     if (!yaml_emitter_emit(self->emitter, &event_stream_start)) {
         PUTBACK;
         return 0;

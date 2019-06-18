@@ -35,7 +35,9 @@ Load (...)
         int err = 0;
   PPCODE:
         /* check if called as method or function */
-        if (items == 1 && !SvROK(ST(0)) && SvOK(ST(0))) {
+          if (items == 1 &&
+              ((!SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
+               (ix == 5 && SvROK(ST(0))))) {     /* Dump */
           /* default options */
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
@@ -50,12 +52,6 @@ Load (...)
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
           PL_markstack_ptr++;
-          PL_markstack_ptr++;
-        } else if (items == 1 && ix == 5 && SvROK(ST(0))) { /* Dump */
-          /* default options */
-          self = (YAML*)calloc(1, sizeof(YAML));
-          old_safe = 0;
-          yaml_arg = ST(0);
           PL_markstack_ptr++;
         } else {
           err = 1;
@@ -254,33 +250,23 @@ SV*
 encoding (YAML *self, SV *value)
     CODE:
         if (SvPOK(value)) {
-          if (!self->parser) {
-            Newx(self->parser,1,yaml_parser_t);
-            yaml_parser_initialize(self->parser);
-          }
-          assert(self->parser);
           if (strEQc(SvPVX(value), "any")) {
-            self->parser->encoding = YAML_ANY_ENCODING;
+            self->encoding = YAML_ANY_ENCODING;
           }
           else if (strEQc(SvPVX(value), "utf8")) {
-            self->parser->encoding = YAML_UTF8_ENCODING;
+            self->encoding = YAML_UTF8_ENCODING;
           }
           else if (strEQc(SvPVX(value), "utf16le")) {
-            self->parser->encoding = YAML_UTF16LE_ENCODING;
+            self->encoding = YAML_UTF16LE_ENCODING;
           }
           else if (strEQc(SvPVX(value), "utf16be")) {
-            self->parser->encoding = YAML_UTF16BE_ENCODING;
+            self->encoding = YAML_UTF16BE_ENCODING;
           }
           else {
             croak("Invalid YAML::Safe->encoding value %s", SvPVX(value));
           }
         } else if (SvOK(value) && !SvTRUE(value)) {
-          if (!self->parser) {
-            Newx(self->parser,1,yaml_parser_t);
-            yaml_parser_initialize(self->parser);
-          }
-          assert(self->parser);
-          self->parser->encoding = YAML_UTF8_ENCODING;
+          self->encoding = YAML_UTF8_ENCODING;
         } else {
           croak("Invalid YAML::Safe->encoding value");
         }
