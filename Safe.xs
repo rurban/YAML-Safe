@@ -38,7 +38,6 @@ Load (...)
           /* with default options */
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
-          /*set_loader_options(loader);*/
           yaml_arg = ST(0);
           PL_markstack_ptr++;
         } else if (items == 2 &&
@@ -56,17 +55,33 @@ Load (...)
         }
         /* set or unset safemode */
         switch (ix) {
-        case 1: self->flags &= ~F_SAFEMODE; ret = Load(self, yaml_arg); break;
-        case 2: self->flags &= ~F_SAFEMODE; ret = LoadFile(self, yaml_arg); break;
-        case 3: self->flags |=  F_SAFEMODE; ret = SafeLoad(self, yaml_arg); break;
-        case 4: self->flags |=  F_SAFEMODE; ret = SafeLoadFile(self, yaml_arg); break;
-        case 5: self->flags &= ~F_SAFEMODE; ret = Dump(self); break;
-        case 6: self->flags &= ~F_SAFEMODE; ret = DumpFile(self, yaml_arg); break;
-        case 7: self->flags |=  F_SAFEMODE; ret = SafeDump(self); break;
-        case 8: self->flags |=  F_SAFEMODE; ret = SafeDumpFile(self, yaml_arg); break;
+        case 1: self->flags &= ~F_SAFEMODE;
+                ret = Load(self, yaml_arg);
+                break;
+        case 2: self->flags &= ~F_SAFEMODE;
+                ret = LoadFile(self, yaml_arg);
+                break;
+        case 3: self->flags |=  F_SAFEMODE;
+                ret = Load(self, yaml_arg);
+                break;
+        case 4: self->flags |=  F_SAFEMODE;
+                ret = LoadFile(self, yaml_arg);
+                break;
+        case 5: self->flags &= ~F_SAFEMODE;
+                ret = Dump(self);
+                break;
+        case 6: self->flags &= ~F_SAFEMODE;
+                ret = DumpFile(self, yaml_arg);
+                break;
+        case 7: self->flags |=  F_SAFEMODE;
+                ret = Dump(self);
+                break;
+        case 8: self->flags |=  F_SAFEMODE;
+                ret = DumpFile(self, yaml_arg);
+                break;
         }
         /* restore old safemode */
-        if (old_save) self->flags |=  F_SAFEMODE;
+        if (old_safe) self->flags |=  F_SAFEMODE;
         else          self->flags &= ~F_SAFEMODE;
         if (!ret)
             XSRETURN_UNDEF;
@@ -79,7 +94,6 @@ libyaml_version()
     {
         const char *v = yaml_get_version_string();
         RETVAL = newSVpv(v, strlen(v));
-
     }
     OUTPUT: RETVAL
 
@@ -119,24 +133,22 @@ void DESTROY (YAML *self)
         if (self->filename)
             Safefree (self->filename);
         if (self->parser)
-          yaml_parser_delete (self->parser);
+            yaml_parser_delete (self->parser);
         if (self->event)
-          yaml_event_delete (self->event);
+            yaml_event_delete (self->event);
         if (self->emitter)
-          yaml_emitter_delete (self->emitter);
+            yaml_emitter_delete (self->emitter);
 
-void new (char *klass)
-    PPCODE:
+SV* new (char *klass)
+    CODE:
         dMY_CXT;
         SV *pv = NEWSV (0, sizeof (YAML));
         SvPOK_only (pv);
-        yaml_init ((YAML *)SvPVX (pv));
-        mXPUSHs (sv_bless (
-           newRV_noinc (pv),
-           strEQc (klass, "YAML::Safe") ? YAML_STASH : gv_stashpv (klass, 1)
-        ));
+        Zero (SvPVX (pv), 1, YAML);
+        RETVAL = sv_bless (newRV (pv), gv_stashpv (klass, 1));
+    OUTPUT: RETVAL
 
-void unicode (YAML *self, int enable = 1)
+SV* unicode (YAML *self, int enable = 1)
     ALIAS:
         unicode         = F_UNICODE
         disableblessed  = F_DISABLEBLESSED
@@ -148,14 +160,14 @@ void unicode (YAML *self, int enable = 1)
         noindentmap     = F_NOINDENTMAP
         canonical       = F_CANONICAL
         openended       = F_OPENENDED
-    PPCODE:
+    CODE:
         if (enable)
           self->flags |=  ix;
         else
           self->flags &= ~ix;
-        XPUSHs (ST (0));
+    OUTPUT: self
 
-void get_unicode (YAML *self)
+SV* get_unicode (YAML *self)
     ALIAS:
         get_unicode         = F_UNICODE
         get_disableblessed  = F_DISABLEBLESSED
@@ -168,42 +180,81 @@ void get_unicode (YAML *self)
         get_canonical       = F_CANONICAL
         get_openended       = F_OPENENDED
         get_safemode        = F_SAFEMODE
-    PPCODE:
-        XPUSHs (boolSV (self->flags & ix));
+    CODE:
+        RETVAL = boolSV (self->flags & ix);
+    OUTPUT: RETVAL
 
-void
+SV*
 get_boolean (YAML *self)
-  PPCODE:
-    if (self->boolean == YAML_BOOLEAN_JSONPP)
-      XPUSHp ("JSON::PP", sizeof("JSON::PP")-1);
-    else if (self->boolean == YAML_BOOLEAN_BOOLEAN)
-      XPUSHp ("boolean", sizeof("boolean")-1);
-    else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER)
-      XPUSHp ("Types::Serialiser", sizeof("Types::Serialiser")-1);
-    else
-      XSRETURN_UNDEF;
+    CODE:
+        if (self->boolean == YAML_BOOLEAN_JSONPP)
+          RETVAL = newSVpvn("JSON::PP", sizeof("JSON::PP")-1);
+        else if (self->boolean == YAML_BOOLEAN_BOOLEAN)
+          RETVAL = newSVpvn("boolean", sizeof("boolean")-1);
+        else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER)
+          RETVAL = newSVpvn("Types::Serialiser", sizeof("Types::Serialiser")-1);
+        else
+          RETVAL = &PL_sv_undef;
+    OUTPUT: RETVAL
 
-void
+SV*
 boolean (YAML *self, SV *value)
-  PPCODE:
-    if (SvPOK(value)) {
-      if (strEQc(SvPVX(value), "JSON::PP")) {
-        self->boolean = YAML_BOOLEAN_JSONPP;
-      }
-      else if (strEQc(SvPVX(value), "boolean")) {
-        self->boolean = YAML_BOOLEAN_BOOLEAN;
-      }
-      else if (strEQc(SvPVX(value), "Types::Serialiser")) {
-        self->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
-      }
-      else if (strEQc(SvPVX(value), "false")) {
-        self->boolean = YAML_BOOLEAN_NONE;
-      }
-      else {
-        croak("Invalid YAML::Safe->boolean value %s", SvPVX(value));
-      }
-   } else if (SvOK(value) && !SvTRUE(value)) {
-     self->boolean = YAML_BOOLEAN_NONE;
-   } else {
-     croak("Invalid YAML::Safe->boolean value");
-   }
+    CODE:
+        if (SvPOK(value)) {
+          if (strEQc(SvPVX(value), "JSON::PP")) {
+            self->boolean = YAML_BOOLEAN_JSONPP;
+          }
+          else if (strEQc(SvPVX(value), "boolean")) {
+            self->boolean = YAML_BOOLEAN_BOOLEAN;
+          }
+          else if (strEQc(SvPVX(value), "Types::Serialiser")) {
+            self->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
+          }
+          else if (strEQc(SvPVX(value), "false")) {
+            self->boolean = YAML_BOOLEAN_NONE;
+          }
+          else {
+            croak("Invalid YAML::Safe->boolean value %s", SvPVX(value));
+          }
+        } else if (SvOK(value) && !SvTRUE(value)) {
+          self->boolean = YAML_BOOLEAN_NONE;
+        } else {
+          croak("Invalid YAML::Safe->boolean value");
+        }
+    OUTPUT: self
+
+SV*
+encoding (YAML *self, SV *value)
+    CODE:
+        if (SvPOK(value)) {
+          if (!self->parser) {
+            Newx(self->parser,1,yaml_parser_t);
+            yaml_parser_initialize(self->parser);
+          }
+          assert(self->parser);
+          if (strEQc(SvPVX(value), "any")) {
+            self->parser->encoding = YAML_ANY_ENCODING;
+          }
+          else if (strEQc(SvPVX(value), "utf8")) {
+            self->parser->encoding = YAML_UTF8_ENCODING;
+          }
+          else if (strEQc(SvPVX(value), "utf16le")) {
+            self->parser->encoding = YAML_UTF16LE_ENCODING;
+          }
+          else if (strEQc(SvPVX(value), "utf16be")) {
+            self->parser->encoding = YAML_UTF16BE_ENCODING;
+          }
+          else {
+            croak("Invalid YAML::Safe->encoding value %s", SvPVX(value));
+          }
+        } else if (SvOK(value) && !SvTRUE(value)) {
+          if (!self->parser) {
+            Newx(self->parser,1,yaml_parser_t);
+            yaml_parser_initialize(self->parser);
+          }
+          assert(self->parser);
+          self->parser->encoding = YAML_UTF8_ENCODING;
+        } else {
+          croak("Invalid YAML::Safe->encoding value");
+        }
+    OUTPUT: self

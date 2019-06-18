@@ -65,6 +65,7 @@ typedef struct {
     yaml_boolean_t boolean;
 } YAML;
 
+#if 0
 typedef struct {
     YAML yaml; /* common options */
     yaml_parser_t parser;
@@ -80,17 +81,17 @@ typedef struct {
     HV *anchors;
     HV *shadows;
 } perl_yaml_dumper_t;
-
-
-int
-Dump(perl_yaml_dumper_t *dumper);
+#endif
 
 int
-DumpFile(perl_yaml_dumper_t *dumper, SV *);
+Dump(YAML *);
 
 int
-Load(perl_yaml_loader_t *, SV *);
+DumpFile(YAML *, SV *);
 
 int
-LoadFile(perl_yaml_loader_t *, SV *);
+Load(YAML *, SV *);
+
+int
+LoadFile(YAML *, SV *);
 
