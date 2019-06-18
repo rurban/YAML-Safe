@@ -29,22 +29,22 @@ is Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
 }
 
 {
-local $YAML::Safe::QuoteNumericStrings = 1;
+  my $obj = YAML::Safe->new->quotenum;
 
-is Dump($a, $b, $c, $d), <<'...', "Dumping Integers and Strings";
+  is $obj->Dump($a, $b, $c, $d), <<'...', "Dumping Integers and Strings";
 --- 42
 --- '42'
 --- 42
 --- 42
 ...
 
-my ($num, $float, $str) = Load(<<'...');
+  my ($num, $float, $str) = $obj->Load(<<'...');
 --- 42
 --- 0.333
 --- '02134'
 ...
 
-is Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
+  is $obj->Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
 --- 42
 --- 0.333
 --- '02134'
@@ -53,22 +53,22 @@ is Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
 }
 
 {
-local $YAML::Safe::QuoteNumericStrings = 0;
+  my $obj = YAML::Safe->new->quotenum(0);
 
-is Dump($a, $b, $c, $d), <<'...', "Dumping Integers and Strings";
+is $obj->Dump($a, $b, $c, $d), <<'...', "Dumping Integers and Strings";
 --- 42
 --- 42
 --- 42
 --- 42
 ...
 
-my ($num, $float, $str) = Load(<<'...');
+my ($num, $float, $str) = $obj->Load(<<'...');
 --- 42
 --- 0.333
 --- '02134'
 ...
 
-is Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
+is $obj->Dump($num, $float, $str), <<'...', "Round tripping integers and strings";
 --- 42
 --- 0.333
 --- 02134

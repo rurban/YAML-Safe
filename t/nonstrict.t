@@ -1,5 +1,8 @@
-use t::TestYAMLTests tests => 2;
+use FindBin '$Bin';
+use lib $Bin;
+use TestYAMLTests tests => 2;
 
+my $obj = YAML::Safe->new;
 my $yaml = <<"...";
 ---
 requires:
@@ -7,12 +10,6 @@ requires:
     Class::Date:                   
 ...
 
-ok (! eval{ Load($yaml) }, "strict yaml fails" );
-
-{
-  no warnings 'once';
-  local $YAML::Safe::NonStrict = 1;
-  my $h;
-  ok ( $h = Load($yaml), "nonstrict yaml passes" );
-}
+ok (! eval{ $obj->Load($yaml) }, "strict yaml fails" );
+ok ( $obj->nonstrict->Load($yaml), "nonstrict yaml passes" );
 

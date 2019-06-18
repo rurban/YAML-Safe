@@ -2,8 +2,9 @@ use FindBin '$Bin';
 use lib $Bin;
 use TestYAMLTests tests => 2;
 
-$YAML::Safe::Indent = 4;
-is Dump([{a => 1, b => 2, c => 3}]), <<'...',
+my $obj = YAML::Safe->new->indent(4);
+
+is $obj->Dump([{a => 1, b => 2, c => 3}]), <<'...',
 ---
 -   a: 1
     b: 2
@@ -11,8 +12,7 @@ is Dump([{a => 1, b => 2, c => 3}]), <<'...',
 ...
 'Dumped with indent 4';
 
-$YAML::Safe::Indent = 8;
-is Dump([{a => 1, b => 2, c => 3}]), <<'...',
+is $obj->indent(8)->Dump([{a => 1, b => 2, c => 3}]), <<'...',
 ---
 -       a: 1
         b: 2

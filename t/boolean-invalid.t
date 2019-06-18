@@ -9,22 +9,17 @@ plan tests => $tests;
 
 for (@invalid) {
     my ($label, $test) = @$_;
-    local $YAML::Safe::Boolean = $test;
-
-    my $data = eval { Load "dummy" };
-#    $@ and diag "ERROR: $@";
+    my $obj;
+    eval { $obj = YAML::Safe->new->boolean($test) };
     cmp_ok($@, '=~', qr{accepts}, "YAML::Safe::Load: $label is an invalid setting");
-
-    my $yaml = eval { Dump { foo => 42 } };
-#    $@ and diag "ERROR: $@";
-    cmp_ok($@, '=~', qr{accepts}, "YAML::Safe::Dump: $label is an invalid setting");
 }
 
 for (@disable) {
     my ($label, $test) = @$_;
-    local $YAML::Safe::Boolean = $test;
+    my $obj;
+    eval { $obj = YAML::Safe->new->boolean($test) };
 
-    my $data = eval { Load "true" };
+    my $data = eval { $obj->Load "true" };
     if ($@) {
         diag "ERROR: $@";
         ok(0, "$label disables YAML::Safe::Boolean");

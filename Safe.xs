@@ -15,7 +15,7 @@ init_MY_CXT(pTHX_ my_cxt_t * cxt)
 
 MODULE = YAML::Safe		PACKAGE = YAML::Safe
 
-PROTOTYPES: DISABLE
+PROTOTYPES: ENABLE
 
 void
 Load (...)
@@ -41,14 +41,16 @@ Load (...)
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
           yaml_arg = ST(0);
-          if (ix >= 5 && ix <= 6 && SvROK(ST(0)))
-            PL_markstack_ptr++;
+          /*if (ix >= 5 && ix <= 6 && SvROK(ST(0)))*/
+          PL_markstack_ptr++;
         } else if (items >= 2 &&
                    SvOK(ST(1)) &&
                    SvROK(ST(0)) &&
                    SvOBJECT(SvRV(ST(0))) &&
                    sv_derived_from (ST(0), "YAML::Safe")) {
           self = (YAML*)SvPVX(SvRV(ST(0)));
+          if (!self)
+            self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
           PL_markstack_ptr++;
@@ -146,6 +148,8 @@ void xxxEND(...)
 
 void DESTROY (YAML *self)
     CODE:
+        if (!self)
+          return;
         if (self->anchors)
             SvREFCNT_dec_NN (self->anchors);
         if (self->shadows)
