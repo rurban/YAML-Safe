@@ -11,11 +11,11 @@ foo: &2 [*2, *1]
 ...
 
 is "$a->[0]", "$a->[1]{'foo'}",
-   'Loading an alias works';
+   'Loading an alias works a foo';
 is "$b->{'foo'}", "$b->{'foo'}[0]",
-   'Another alias load test';
+   'Another alias load test b 0';
 is "$b", "$b->{'foo'}[1]",
-   'Another alias load test';
+   'Another alias load test b 1';
 
 my $value = { xxx => 'yyy' };
 my $array = [$value, 'hello', $value];
