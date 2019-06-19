@@ -1,9 +1,5 @@
 #include <perl_libyaml.h>
 
-static void
-set_emitter_options(YAML *self, yaml_emitter_t *emitter);
-static void
-set_parser_options(YAML *self, yaml_parser_t *parser);
 static SV *
 load_node(YAML *self);
 static SV *
@@ -201,14 +197,15 @@ loader_error_msg(YAML *self, char *problem)
 /*
  * Set loader options from YAML* object.
  */
-static void
+void
 set_parser_options(YAML *self, yaml_parser_t *parser)
 {
     self->document = 0;
     self->filename = NULL;
 
-    if (self->encoding)
-        self->parser->encoding = self->encoding;
+    if ((int)self->encoding)
+      yaml_parser_set_encoding(parser, self->encoding);
+
     /* As with YAML::Tiny. Default: strict Load */
     parser->problem_nonstrict = self->flags & F_NONSTRICT;
 }
@@ -216,7 +213,7 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
 /*
  * Set dumper options from YAML* object
  */
-static void
+void
 set_emitter_options(YAML *self, yaml_emitter_t *emitter)
 {
     yaml_emitter_set_unicode(emitter, 1);
@@ -225,6 +222,9 @@ set_emitter_options(YAML *self, yaml_emitter_t *emitter)
     }
     if (!emitter->best_width) {
       yaml_emitter_set_width(emitter, 80);
+    }
+    if ((int)self->encoding) {
+      yaml_emitter_set_encoding(emitter, self->encoding);
     }
 
     emitter->indentless_map = self->flags & F_NOINDENTMAP;

@@ -96,3 +96,7 @@ Load(YAML *, SV *);
 int
 LoadFile(YAML *, SV *);
 
+void
+set_parser_options(YAML *self, yaml_parser_t *parser);
+void
+set_emitter_options(YAML *self, yaml_emitter_t *emitter);

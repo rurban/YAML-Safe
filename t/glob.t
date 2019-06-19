@@ -1,8 +1,11 @@
 # YAML 1.2 only
-use t::TestYAMLTests tests => 4;
+use FindBin '$Bin';
+use lib $Bin;
+use TestYAMLTests tests => 4;
 no warnings 'once';
 
 $main::G1 = "Hello";
+my $obj = YAML::Safe->new;
 
 is Dump(*G1), <<'...', "Dump a scalar glob";
 --- !!perl/glob
@@ -12,9 +15,8 @@ SCALAR: Hello
 ...
 
 eval '@main::G1 = (1..3)';
-local $YAML::Safe::IndentlessMap = 1;
 
-is Dump(*G1), <<'...', "Add an array to the glob";
+is $obj->noindentmap->Dump(*G1), <<'...', "Add an array to the glob";
 --- !!perl/glob
 ARRAY:
 - 1
@@ -31,13 +33,13 @@ eval '@main::G1 = (1..3)';
 
 my $g = *G1;
 
-is Dump(\$g), <<'...', "Ref to glob";
+is $obj->Dump(\$g), <<'...', "Ref to glob";
 --- &1 !!perl/ref
 =: *1
 ...
 
 my $array = [\$g, \$g, \*G1];
-is Dump($array), <<'...', "Globs and aliases";
+is $obj->Dump($array), <<'...', "Globs and aliases";
 ---
 - &1 !!perl/ref
   =: *1

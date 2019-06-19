@@ -19,7 +19,7 @@ for (@disable) {
     my $obj;
     eval { $obj = YAML::Safe->new->boolean($test) };
 
-    my $data = eval { $obj->Load "true" };
+    my $data = eval { $obj->Load("true") };
     if ($@) {
         diag "ERROR: $@";
         ok(0, "$label disables YAML::Safe::Boolean");

@@ -249,28 +249,107 @@ boolean (YAML *self, SV *value)
         }
     OUTPUT: self
 
-SV*
-encoding (YAML *self, SV *value)
+char*
+get_encoding (YAML *self, SV *value)
     CODE:
-        if (SvPOK(value)) {
-          if (strEQc(SvPVX(value), "any")) {
+        switch (self->encoding) {
+        case YAML_ANY_ENCODING:     RETVAL = "any"; break;
+        case YAML_UTF8_ENCODING:    RETVAL = "utf8"; break;
+        case YAML_UTF16LE_ENCODING: RETVAL = "utf16le"; break;
+        case YAML_UTF16BE_ENCODING: RETVAL = "utf16be"; break;
+        default: RETVAL = "utf8"; break;
+        }
+    OUTPUT: RETVAL
+
+# for parser and emitter
+SV*
+encoding (YAML *self, char *value)
+    CODE:
+          if (strEQc(value, "any")) {
             self->encoding = YAML_ANY_ENCODING;
           }
-          else if (strEQc(SvPVX(value), "utf8")) {
+          else if (strEQc(value, "utf8")) {
             self->encoding = YAML_UTF8_ENCODING;
           }
-          else if (strEQc(SvPVX(value), "utf16le")) {
+          else if (strEQc(value, "utf16le")) {
             self->encoding = YAML_UTF16LE_ENCODING;
           }
-          else if (strEQc(SvPVX(value), "utf16be")) {
+          else if (strEQc(value, "utf16be")) {
             self->encoding = YAML_UTF16BE_ENCODING;
           }
           else {
-            croak("Invalid YAML::Safe->encoding value %s", SvPVX(value));
+            croak("Invalid YAML::Safe->encoding value %s", value);
           }
-        } else if (SvOK(value) && !SvTRUE(value)) {
-          self->encoding = YAML_UTF8_ENCODING;
-        } else {
-          croak("Invalid YAML::Safe->encoding value");
+    OUTPUT: self
+
+char*
+get_linebreak (YAML *self, SV *value)
+    CODE:
+        if (!self->emitter) {
+          XSRETURN_UNDEF;
+        }
+        switch (self->emitter->line_break) {
+        case YAML_ANY_BREAK:   RETVAL = "any"; break;
+        case YAML_CR_BREAK:    RETVAL = "cr"; break;
+        case YAML_LN_BREAK:    RETVAL = "ln"; break;
+        case YAML_CRLN_BREAK:  RETVAL = "crln"; break;
+        default:               RETVAL = "any"; break;
+        }
+    OUTPUT: RETVAL
+
+SV*
+linebreak (YAML *self, char *value)
+    CODE:
+        if (!self->emitter) {
+          Newx(self->emitter,1,yaml_emitter_t);
+          yaml_emitter_initialize(self->emitter);
+          set_emitter_options(self, self->emitter);
+        }
+        if (strEQc(value, "any")) {
+          yaml_emitter_set_break(self->emitter, YAML_ANY_BREAK);
+        }
+        else if (strEQc(value, "cr")) {
+          yaml_emitter_set_break(self->emitter, YAML_CR_BREAK);
+        }
+        else if (strEQc(value, "ln")) {
+          yaml_emitter_set_break(self->emitter, YAML_LN_BREAK);
+        }
+        else if (strEQc(value, "crln")) {
+          yaml_emitter_set_break(self->emitter, YAML_CRLN_BREAK);
+        }
+        else {
+          croak("Invalid YAML::Safe->linebreak value %s", value);
         }
     OUTPUT: self
+
+UV
+get_indent (YAML *self)
+    ALIAS:
+        get_indent          = 1
+        get_wrapwidth       = 2
+    CODE:
+        # both are for the dumper only
+        RETVAL = ix == 1 ? (self->emitter ?
+                            self->emitter->best_indent : 2)
+               : ix == 2 ? (self->emitter ?
+                            self->emitter->best_width : 80)
+               : 0;
+    OUTPUT: RETVAL
+
+SV*
+indent (YAML *self, UV uv)
+    ALIAS:
+        indent          = 1
+        wrapwidth       = 2
+    CODE:
+        if (!self->emitter) {
+          Newx(self->emitter,1,yaml_emitter_t);
+          yaml_emitter_initialize(self->emitter);
+          set_emitter_options(self, self->emitter);
+        }
+        if (ix == 1)
+          yaml_emitter_set_indent(self->emitter, uv);
+        else if (ix == 2)
+          yaml_emitter_set_width(self->emitter, uv);
+    OUTPUT: self
+

@@ -2,6 +2,8 @@ use FindBin '$Bin';
 use lib $Bin;
 use TestYAMLTests tests => 15;
 
+my $obj = YAML::Safe->new;
+
 my $yaml = <<"EOM";
 local_array: !Foo::Bar [a]
 local_hash: !Foo::Bar { a: 1 }
@@ -21,8 +23,8 @@ isa_ok($objects->{hash}, "Foo::Bar", "perl tag (hash)");
 isa_ok($objects->{regex}, "Foo::Bar", "perl tag (regexp)");
 isa_ok($objects->{scalar}, "Foo::Bar", "perl tag (scalar)");
 
-local $YAML::Safe::LoadBlessed = 0;
-my $hash = Load $yaml;
+# was LoadBlessed = 0
+my $hash = $obj->disableblessed->Load($yaml);
 cmp_ok(ref $hash->{local_array}, 'eq', 'ARRAY', "Array not blessed (local)");
 cmp_ok(ref $hash->{local_hash}, 'eq', 'HASH', "Hash not blessed (local)");
 cmp_ok(ref $hash->{local_scalar}, 'eq', '', "Scalar not blessed (local)");

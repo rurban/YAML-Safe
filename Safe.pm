@@ -11,46 +11,40 @@ use base 'Exporter';
 %YAML::Safe::EXPORT_TAGS = (
     all => [qw(Dump Load LoadFile DumpFile)],
 );
-# our ($UseCode, $DumpCode, $LoadCode, $Boolean, $LoadBlessed, $Indent);
-# $YAML::Safe::NonStrict = 1; # for Load
-# $YAML::Safe::UseCode = 0;   # for Dump
-# $YAML::Safe::DumpCode = 0;  # for Dump
-# $YAML::Safe::LoadCode = 0;  # for Load. ignored
-# $YAML::Safe::QuoteNumericStrings = 1;
 
 use XSLoader;
 use Scalar::Util qw/ openhandle /;
 
-sub _DumpFile {
-    my $OUT;
-    my $filename = shift;
-    if (openhandle $filename) {
-        $OUT = $filename;
-    }
-    else {
-        my $mode = '>';
-        if ($filename =~ /^\s*(>{1,2})\s*(.*)$/) {
-            ($mode, $filename) = ($1, $2);
-        }
-        open $OUT, $mode, $filename
-          or die "Can't open '$filename' for output:\n$!";
-    }
-    local $/ = "\n"; # reset special to "sane"
-    print $OUT YAML::Safe::_Dump(@_);
-}
-
-sub _LoadFile {
-    my $IN;
-    my $filename = shift;
-    if (openhandle $filename) {
-        $IN = $filename;
-    }
-    else {
-        open $IN, $filename
-          or die "Can't open '$filename' for input:\n$!";
-    }
-    return YAML::Safe::_Load(do { local $/; local $_ = <$IN> });
-}
+#sub _DumpFile {
+#    my $OUT;
+#    my $filename = shift;
+#    if (openhandle $filename) {
+#        $OUT = $filename;
+#    }
+#    else {
+#        my $mode = '>';
+#        if ($filename =~ /^\s*(>{1,2})\s*(.*)$/) {
+#            ($mode, $filename) = ($1, $2);
+#        }
+#        open $OUT, $mode, $filename
+#          or die "Can't open '$filename' for output:\n$!";
+#    }
+#    local $/ = "\n"; # reset special to "sane"
+#    print $OUT YAML::Safe::Dump(@_);
+#}
+#
+#sub _LoadFile {
+#    my $IN;
+#    my $filename = shift;
+#    if (openhandle $filename) {
+#        $IN = $filename;
+#    }
+#    else {
+#        open $IN, $filename
+#          or die "Can't open '$filename' for input:\n$!";
+#    }
+#    return YAML::Safe::Load(do { local $/; local $_ = <$IN> });
+#}
 
 
 # XXX The following code should be moved from Perl to C.
@@ -277,13 +271,13 @@ Turns on handling of code blocks.
 
 Default utf8
 
-Set to any, utf8, utf16le or utf16be
+Set to any, utf8, utf16le or utf16be.
 
 =item C<safemode>
 
 Default 0
 
-Set to 1 or use the Safe methodsa to restrict the allowed classed only
+Set to 1 or use the Safe methods to restrict the allowed classed only
 the set of registered classes or tags starting with "perl/".
 
 =back

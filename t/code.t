@@ -4,6 +4,7 @@ use TestYAMLTests tests => 5;
 
 #-------------------------------------------------------------------------------
 my $sub = sub { return "Hi.\n" };
+my $obj = YAML::Safe->new;
 
 my $yaml = <<'...';
 --- !!perl/code '{ "DUMMY" }'
@@ -31,8 +32,7 @@ if (new B::Deparse -> coderef2text ( sub { no strict; 1; use strict; 1; })
     $yaml =~ s/use strict/use strict 'refs'/g;
 }
 
-$YAML::Safe::DumpCode = 1;
-is Dump($sub), $yaml,
+is $obj->dumpcode->Dump($sub), $yaml,
     "Dumping a blessed code ref works (with B::Deparse)";
 
 #-------------------------------------------------------------------------------
@@ -43,8 +43,7 @@ $yaml = <<'...';
 --- !!perl/code:Barry::White '{ "DUMMY" }'
 ...
 
-$YAML::Safe::DumpCode = 0;
-is Dump($sub), $yaml,
+is $obj->dumpcode(0)->Dump($sub), $yaml,
     "Dumping a blessed code ref works (with DUMMY again)";
 
 $yaml = <<'...';
@@ -56,14 +55,10 @@ $yaml = <<'...';
   }
 ...
 
-$YAML::Safe::LoadCode = 0;
-
-$sub = Load($yaml);
+$sub = $obj->loadcode(0)->Load($yaml);
 my $return = $sub->();
 is($return, undef, "Loaded dummy coderef");
 
-$YAML::Safe::LoadCode = 1;
-
-$sub = Load($yaml);
+$sub = $obj->loadcode->Load($yaml);
 $return = $sub->();
 cmp_ok($return, 'eq', "Bye.\n", "Loaded coderef");
