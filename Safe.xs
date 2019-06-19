@@ -19,6 +19,7 @@ PROTOTYPES: ENABLE
 
 void
 Load (...)
+  PROTOTYPE: $;$@
   ALIAS:
         Load      = 1
         LoadFile  = 2
