@@ -539,6 +539,13 @@ load_mapping(YAML *self, char *tag)
             );
             if (!(self->flags & F_DISABLEBLESSED)) {
                 klass = tag + strlen(prefix);
+                if (self->flags & F_SAFEMODE && self->safeclasses) {
+                    if (hv_exists(self->safeclasses, klass, strlen(klass))) {
+                        Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
+                                         "Unsafe class %s skipped loading", klass);
+                        return hash_ref;
+                    }
+                }
                 sv_bless(hash_ref, gv_stashpv(klass, TRUE));
             }
         }
@@ -579,6 +586,13 @@ load_sequence(YAML *self)
             );
             if (!(self->flags & F_DISABLEBLESSED)) {
                 klass = tag + strlen(prefix);
+                if (self->flags & F_SAFEMODE && self->safeclasses) {
+                    if (hv_exists(self->safeclasses, klass, strlen(klass))) {
+                        Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
+                                         "Unsafe class %s skipped loading", klass);
+                        return array_ref;
+                    }
+                }
                 sv_bless(array_ref, gv_stashpv(klass, TRUE));
             }
         }
@@ -757,10 +771,17 @@ load_regexp(YAML * self)
     if (strlen(tag) > strlen(prefix) && strnEQ(tag, prefix, strlen(prefix))) {
         if (!(self->flags & F_DISABLEBLESSED)) {
             char *klass = tag + strlen(prefix);
+            if (self->flags & F_SAFEMODE && self->safeclasses) {
+                if (hv_exists(self->safeclasses, klass, strlen(klass))) {
+                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
+                                     "Unsafe class %s skipped loading", klass);
+                    goto cont_rx;
+                }
+            }
             sv_bless(regexp, gv_stashpv(klass, TRUE));
         }
     }
-
+ cont_rx:
     if (anchor)
         (void)hv_store(self->anchors, anchor, strlen(anchor),
                        SvREFCNT_inc(regexp), 0);
@@ -805,10 +826,16 @@ load_code(YAML * self)
     if (strlen(tag) > strlen(prefix) && strnEQ(tag, prefix, strlen(prefix))) {
         if (!(self->flags & F_DISABLEBLESSED)) {
             char *klass = tag + strlen(prefix);
+            if (self->flags & F_SAFEMODE && self->safeclasses) {
+                if (hv_exists(self->safeclasses, klass, strlen(klass))) {
+                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
+                                     "Unsafe code in class %s skipped", klass);
+                    return &PL_sv_undef;
+                }
+            }
             sv_bless(code, gv_stashpv(klass, TRUE));
         }
     }
-
     if (anchor)
         (void)hv_store(self->anchors, anchor, strlen(anchor),
                        SvREFCNT_inc(code), 0);

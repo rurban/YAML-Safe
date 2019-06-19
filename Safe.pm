@@ -169,11 +169,17 @@ YAML::Safe - Safe Perl YAML Serialization using XS and libyaml
     $yaml->SafeClass("DateTime");
     $array = $yaml->SafeLoadFile("META.yml");
 
-    $yaml = YAML::Safe->new;
+    $yaml = YAML::Safe->new->canonical;
     $yaml->SafeClass("DateTime");
     $array = $yaml->SafeDumpFile("META.yml");
 
 =head1 Description
+
+This module is a refactoring of L<YAML::XS>, the old Perl XS binding to
+C<libyaml> which offers Perl somewhat acceptable YAML support to date.
+YAML::XS never produced code which could be read from YAML, and thus
+was unsuitable to be used as YAML replacement for core and CPAN.
+It also required reading and setting options from global variables.
 
 Kirill Siminov's C<libyaml> is a good YAML library implementation. The C
 library is written precisely to the YAML 1.1 specification, and offers YAML
@@ -181,20 +187,14 @@ library is written precisely to the YAML 1.1 specification, and offers YAML
 C<libsyck> is written a bit more elegant, has less bugs, is not as strict as
 libyaml, but misses some YAML features. It can only do YAML 1.0
 
-This module is a refactoring of L<YAML::XS>, the old Perl XS binding to
-libyaml which offers Perl somewhat acceptable YAML support to date.
-YAML::XS never produced code which could be read from YAML, and thus
-was unsuitable to be used as YAML replacement for core and CPAN.
-It also required reading and setting options from global variables.
-
 This module exports the functions C<Dump> and C<Load>, and do work as
 functions exactly like L<YAML::XS> and C<YAML.pm>'s corresponding
 functions.  It is however preferred to use the new OO-interface to
 store all options in the new created object. YAML::Safe does not
 support the old globals anymore.
 
-There are also new Safe variants of Load and Dump methods, and set
-options as setter methods and call the Safe methods.
+There are also new Safe variants of Load and Dump methods, and
+options as setter methods.
 
 If you set the option C<noindentmap>, C<YAML::Safe> will behave like
 with version E<lt> 0.70, which creates yml files which cannot be read

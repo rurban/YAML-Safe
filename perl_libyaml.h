@@ -52,13 +52,14 @@ typedef enum {
 } yaml_boolean_t;
 
 typedef struct {
-    char *filename;
-    PerlIO *perlio;
     yaml_parser_t *parser;
     yaml_event_t *event;
     yaml_emitter_t *emitter;
+    char *filename;
+    PerlIO *perlio;
     HV *anchors;
     HV *shadows;
+    HV *safeclasses;
     long anchor;
     int document;
     U32 flags;

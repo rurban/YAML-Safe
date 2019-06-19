@@ -175,7 +175,8 @@ SV* new (char *klass)
         RETVAL = sv_bless (newRV (pv), gv_stashpv (klass, 1));
     OUTPUT: RETVAL
 
-SV* unicode (YAML *self, int enable = 1)
+YAML*
+unicode (YAML *self, int enable = 1)
     ALIAS:
         unicode         = F_UNICODE
         disableblessed  = F_DISABLEBLESSED
@@ -188,13 +189,15 @@ SV* unicode (YAML *self, int enable = 1)
         canonical       = F_CANONICAL
         openended       = F_OPENENDED
     CODE:
+        (void)RETVAL;
         if (enable)
           self->flags |=  ix;
         else
           self->flags &= ~ix;
     OUTPUT: self
 
-SV* get_unicode (YAML *self)
+SV*
+get_unicode (YAML *self)
     ALIAS:
         get_unicode         = F_UNICODE
         get_disableblessed  = F_DISABLEBLESSED
@@ -224,9 +227,10 @@ get_boolean (YAML *self)
           RETVAL = &PL_sv_undef;
     OUTPUT: RETVAL
 
-SV*
+YAML*
 boolean (YAML *self, SV *value)
     CODE:
+        (void)RETVAL;
         if (SvPOK(value)) {
           if (strEQc(SvPVX(value), "JSON::PP")) {
             self->boolean = YAML_BOOLEAN_JSONPP;
@@ -237,13 +241,13 @@ boolean (YAML *self, SV *value)
           else if (strEQc(SvPVX(value), "Types::Serialiser")) {
             self->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
           }
-          else if (strEQc(SvPVX(value), "false")) {
+          else if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
             self->boolean = YAML_BOOLEAN_NONE;
           }
           else {
             croak("Invalid YAML::Safe->boolean value %s", SvPVX(value));
           }
-        } else if (SvOK(value) && !SvTRUE(value)) {
+        } else if (!SvTRUE(value)) {
           self->boolean = YAML_BOOLEAN_NONE;
         } else {
           croak("Invalid YAML::Safe->boolean value");
@@ -251,7 +255,7 @@ boolean (YAML *self, SV *value)
     OUTPUT: self
 
 char*
-get_encoding (YAML *self, SV *value)
+get_encoding (YAML *self)
     CODE:
         switch (self->encoding) {
         case YAML_ANY_ENCODING:     RETVAL = "any"; break;
@@ -263,28 +267,29 @@ get_encoding (YAML *self, SV *value)
     OUTPUT: RETVAL
 
 # for parser and emitter
-SV*
+YAML*
 encoding (YAML *self, char *value)
     CODE:
-          if (strEQc(value, "any")) {
-            self->encoding = YAML_ANY_ENCODING;
-          }
-          else if (strEQc(value, "utf8")) {
-            self->encoding = YAML_UTF8_ENCODING;
-          }
-          else if (strEQc(value, "utf16le")) {
-            self->encoding = YAML_UTF16LE_ENCODING;
-          }
-          else if (strEQc(value, "utf16be")) {
-            self->encoding = YAML_UTF16BE_ENCODING;
-          }
-          else {
-            croak("Invalid YAML::Safe->encoding value %s", value);
-          }
+        (void)RETVAL;
+        if (strEQc(value, "any")) {
+          self->encoding = YAML_ANY_ENCODING;
+        }
+        else if (strEQc(value, "utf8")) {
+          self->encoding = YAML_UTF8_ENCODING;
+        }
+        else if (strEQc(value, "utf16le")) {
+          self->encoding = YAML_UTF16LE_ENCODING;
+        }
+        else if (strEQc(value, "utf16be")) {
+          self->encoding = YAML_UTF16BE_ENCODING;
+        }
+        else {
+          croak("Invalid YAML::Safe->encoding value %s", value);
+        }
     OUTPUT: self
 
 char*
-get_linebreak (YAML *self, SV *value)
+get_linebreak (YAML *self)
     CODE:
         if (!self->emitter) {
           XSRETURN_UNDEF;
@@ -298,9 +303,10 @@ get_linebreak (YAML *self, SV *value)
         }
     OUTPUT: RETVAL
 
-SV*
+YAML*
 linebreak (YAML *self, char *value)
     CODE:
+        (void)RETVAL;
         if (!self->emitter) {
           Newx(self->emitter,1,yaml_emitter_t);
           yaml_emitter_initialize(self->emitter);
@@ -337,12 +343,13 @@ get_indent (YAML *self)
                : 0;
     OUTPUT: RETVAL
 
-SV*
+YAML*
 indent (YAML *self, UV uv)
     ALIAS:
         indent          = 1
         wrapwidth       = 2
     CODE:
+        (void)RETVAL;
         if (!self->emitter) {
           Newx(self->emitter,1,yaml_emitter_t);
           yaml_emitter_initialize(self->emitter);
@@ -352,5 +359,21 @@ indent (YAML *self, UV uv)
           yaml_emitter_set_indent(self->emitter, uv);
         else if (ix == 2)
           yaml_emitter_set_width(self->emitter, uv);
+    OUTPUT: self
+
+YAML*
+SafeClass (YAML *self, ...)
+    PROTOTYPE: $;@
+    PREINIT:
+        int i;
+    CODE:
+        (void)RETVAL;
+        self->flags |= F_SAFEMODE;
+        if (!self->safeclasses)
+          self->safeclasses = newHV();
+        for (i=1; i<items; i++) {
+          const char *s = SvPVX_const(ST(i));
+          (void)hv_store(self->safeclasses, s, strlen(s), newSViv(1), 0);
+        }
     OUTPUT: self
 
