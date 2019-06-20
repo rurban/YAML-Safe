@@ -16,6 +16,10 @@
 #include <yaml.h>
 #include <ppport_sort.h>
 
+#if PERL_VERSION < 5
+#define sv_peek(pTHX_ sv_file) ""
+#endif
+
 /* from cperl */
 #ifndef strEQc
 /* the buffer ends with \0, includes comparison of the \0.

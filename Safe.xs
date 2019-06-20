@@ -23,12 +23,12 @@ Load (...)
   ALIAS:
         Load      = 1
         LoadFile  = 2
-        SafeLoad  = 3
-        SafeLoadFile = 4
-        Dump      = 5
-        DumpFile  = 6
-        SafeDump  = 7
-        SafeDumpFile = 8
+        Dump      = 3
+        DumpFile  = 4
+        SafeLoad  = 9
+        SafeLoadFile = 10
+        SafeDump  = 11
+        SafeDumpFile = 12
   PREINIT:
 	YAML *self;
         SV *yaml_arg;
@@ -47,8 +47,8 @@ Load (...)
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
         }
-        else if ((items == 1 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
-                 (ix >= 5 && ix <= 6)) {  /* or Dump */
+        else if ((items == 1 && ix < 8 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
+                 (ix >= 3 && ix <= 4)) {  /* or Dump */
           /* default options */
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
@@ -60,49 +60,42 @@ Load (...)
         /* set or unset safemode */
         switch (ix) {
         case 1: if (err)
-                  croak ("Usage: Load(YAML::Safe*, str) or Load(str)");
+                  croak ("Usage: Load([YAML::Safe,] str)");
                 self->flags &= ~F_SAFEMODE;
                 ret = Load(self, yaml_arg);
                 break;
-        case 2: 
-                if (err)
-                  croak ("Usage: LoadFile(YAML::Safe*, str|io) or LoadFile(str|io)");
+        case 2: if (err)
+                  croak ("Usage: LoadFile([YAML::Safe,] filename|io)");
                 self->flags &= ~F_SAFEMODE;
                 ret = LoadFile(self, yaml_arg);
                 break;
-        case 3: 
-                if (err)
-                  croak ("Usage: SafeLoad(YAML::Safe*, str|io)");
-                self->flags |=  F_SAFEMODE;
-                ret = Load(self, yaml_arg);
-                break;
-        case 4: 
-                if (err)
-                  croak ("Usage: SafeLoadFile(YAML::Safe*, str|io)");
-                self->flags |=  F_SAFEMODE;
-                ret = LoadFile(self, yaml_arg);
-                break;
-        case 5: 
-                if (err)
-                  croak ("Usage: Dump(YAML::Safe*, ...) or Dump(...)");
+        case 3: if (err)
+                  croak ("Usage: Dump([YAML::Safe,] ...)");
                 self->flags &= ~F_SAFEMODE;
                 ret = Dump(self);
                 break;
-        case 6: 
-                if (err)
-                  croak ("Usage: DumpFile(YAML::Safe*, str|io, ...) or DumpFile(str|io, ...)");
+        case 4: if (err)
+                  croak ("Usage: DumpFile([YAML::Safe,] filename|io, ...)");
                 self->flags &= ~F_SAFEMODE;
                 ret = DumpFile(self, yaml_arg);
                 break;
-        case 7: 
-                if (err)
-                  croak ("Usage: SafeDump(YAML::Safe*, ...)");
+        case 9: if (err)
+                  croak ("Usage: SafeLoad(YAML::Safe, str)");
+                self->flags |=  F_SAFEMODE;
+                ret = Load(self, yaml_arg);
+                break;
+        case 10: if (err)
+                  croak ("Usage: SafeLoadFile(YAML::Safe, filename|io)");
+                self->flags |=  F_SAFEMODE;
+                ret = LoadFile(self, yaml_arg);
+                break;
+        case 11: if (err)
+                  croak ("Usage: SafeDump(YAML::Safe, ...)");
                 self->flags |=  F_SAFEMODE;
                 ret = Dump(self);
                 break;
-        case 8: 
-                if (err)
-                  croak ("Usage: SafeDumpFile(YAML::Safe*, str|io, ...)");
+        case 12: if (err)
+                  croak ("Usage: SafeDumpFile(YAML::Safe*, filename|io, ...)");
                 self->flags |=  F_SAFEMODE;
                 ret = DumpFile(self, yaml_arg);
                 break;
