@@ -1542,3 +1542,24 @@ void xxx_local_patches() {
     printf("%s", local_patches[0]);
 }
 #endif
+
+void
+yaml_destroy (YAML *self)
+{
+    if (!self)
+        return;
+    if (self->anchors)
+        SvREFCNT_dec_NN (self->anchors);
+    if (self->shadows)
+        SvREFCNT_dec_NN (self->shadows);
+    if (self->perlio)
+        SvREFCNT_dec_NN (self->perlio);
+    if (self->filename)
+        Safefree (self->filename);
+    if (self->parser)
+        yaml_parser_delete (self->parser);
+    if (self->event)
+        yaml_event_delete (self->event);
+    if (self->emitter)
+        yaml_emitter_delete (self->emitter);
+}

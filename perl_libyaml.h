@@ -103,6 +103,9 @@ yaml_init (YAML *self)
   return self;
 }
 
+void
+yaml_destroy (YAML *self);
+
 int
 Dump(YAML *);
 
