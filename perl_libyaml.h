@@ -31,10 +31,7 @@
 #define TAG_PERL_REF TAG_PERL_PREFIX "ref"
 #define TAG_PERL_STR TAG_PERL_PREFIX "str"
 #define TAG_PERL_GLOB TAG_PERL_PREFIX "glob"
-#define ERRMSG "YAML::Safe Error: "
-#define LOADERRMSG "YAML::Safe::Load Error: "
-#define LOADFILEERRMSG "YAML::Safe::LoadFile Error: "
-#define DUMPERRMSG "YAML::Safe::Dump Error: "
+#define ERRMSG "yaml error: "
 
 #define F_UNICODE          0x00000001
 #define F_DISABLEBLESSED   0x00000002

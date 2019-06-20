@@ -30,7 +30,7 @@ foo: 2
  bar: 4
 +++ error
 mapping values are not allowed in this context
-document: 1
+document 1
 line: 2
 column: 5
 
@@ -39,7 +39,7 @@ column: 5
 *: foo
 +++ error
 did not find expected alphabetic or numeric character
-document: 1
+document 1
 column: 2
 while scanning an alias
 
@@ -49,7 +49,7 @@ while scanning an alias
 foo bar: *
 +++ error
 did not find expected alphabetic or numeric character
-document: 1
+document 1
 line: 2
 column: 11
 while scanning an alias
@@ -60,7 +60,7 @@ while scanning an alias
 --- * * *
 +++ error
 did not find expected alphabetic or numeric character
-document: 2
+document 2
 line: 2
 column: 6
 while scanning an alias
@@ -70,14 +70,14 @@ while scanning an alias
 --- !!foo []
 +++ error
 bad tag found for array: 'tag:yaml.org,2002:foo'
-document: 1
+document 1
 
 === Bad tag for hash
 +++ yaml
 --- !!!foo {}
 +++ error
 bad tag found for hash: 'tag:yaml.org,2002:!foo'
-document: 1
+document 1
 !line:
 !column:
 

@@ -154,17 +154,15 @@ loader_error_msg(YAML *self, char *problem)
     if (!problem)
         problem = (char *)self->parser->problem;
     if (self->filename)
-      msg = form("%s%swas found at document: %s",
-                 LOADFILEERRMSG,
-                 (problem ? form("The problem\n\n    %s\n\n", problem)
-                          : "A problem "),
+      msg = form("%s%s at file %s",
+                 ERRMSG,
+                 (problem ? problem : "A problem"),
                  self->filename
                  );
     else
-      msg = form("%s%swas found at document: %d",
-                 LOADERRMSG,
-                 (problem ? form("The problem\n\n    %s\n\n", problem)
-                          : "A problem "),
+      msg = form("%s%s at document %d",
+                 ERRMSG,
+                 (problem ? problem : "A problem"),
                  self->document
                  );
     if (self->parser->problem_mark.line ||
