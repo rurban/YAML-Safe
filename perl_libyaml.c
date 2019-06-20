@@ -1546,9 +1546,6 @@ yaml_destroy (YAML *self)
 {
     if (!self)
         return;
-    SvREFCNT_dec (self->anchors);
-    SvREFCNT_dec (self->shadows);
-    SvREFCNT_dec (self->perlio);
     if (self->filename)
         Safefree (self->filename);
     if (self->parser)

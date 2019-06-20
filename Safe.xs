@@ -141,15 +141,13 @@ void xxxEND(...)
     PPCODE:
         sv = MY_CXT.yaml_str;
         MY_CXT.yaml_str = NULL;
-        if (sv)
-            SvREFCNT_dec_NN(sv);
+        SvREFCNT_dec(sv);
 	/* skip implicit PUTBACK, returning @_ to caller, more efficient*/
         return;
 
 void DESTROY (YAML *self)
     CODE:
         yaml_destroy (self);
-        Zero (self, 1, YAML);
 
 SV* new (char *klass)
     CODE:
