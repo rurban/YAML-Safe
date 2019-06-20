@@ -291,6 +291,7 @@ linebreak (YAML *self, char *value)
     CODE:
         (void)RETVAL;
         if (!self->emitter) {
+          /*fprintf(stderr, "new emitter\n");*/
           Newx(self->emitter,1,yaml_emitter_t);
           yaml_emitter_initialize(self->emitter);
           set_emitter_options(self, self->emitter);
@@ -327,7 +328,7 @@ get_indent (YAML *self)
     OUTPUT: RETVAL
 
 YAML*
-indent (YAML *self, UV uv)
+indent (YAML *self, IV iv)
     ALIAS:
         indent          = 1
         wrapwidth       = 2
@@ -338,10 +339,18 @@ indent (YAML *self, UV uv)
           yaml_emitter_initialize(self->emitter);
           set_emitter_options(self, self->emitter);
         }
-        if (ix == 1)
-          yaml_emitter_set_indent(self->emitter, uv);
-        else if (ix == 2)
-          yaml_emitter_set_width(self->emitter, uv);
+        if (!SvIOK(ST(1)))
+          croak("Invalid argument type");
+        if (ix == 1) {
+          if (iv < 1 || iv >= 10)
+            croak("Invalid YAML::Safe->indent value %"  IVdf, iv);
+          yaml_emitter_set_indent(self->emitter, iv);
+        }
+        else if (ix == 2) {
+          if (iv < 1 || iv >= 0xffff)
+            croak("Invalid YAML::Safe->wrapwidth value %"  IVdf, iv);
+          yaml_emitter_set_width(self->emitter, iv);
+        }
     OUTPUT: self
 
 YAML*

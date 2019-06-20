@@ -1,5 +1,5 @@
 use strict;
-use Test::More tests => 40;
+use Test::More tests => 53;
 use YAML::Safe;
 my $obj = YAML::Safe->new;
 
@@ -20,8 +20,8 @@ my %intopts = (
 my %stropts = (
                # default and allowed values
   "boolean" => [undef, "JSON::PP", "boolean", "Types::Serialiser" ],
-  "encoding" => [ "any", "any", "utf8", "utf16le" or "utf16be" ],
-  "linebreak" => [ "any", "any", "cr", "ln" or "crln" ] );
+  "encoding" => [ "any", "any", "utf8", "utf16le", "utf16be" ],
+  "linebreak" => [ "any", "any", "cr", "ln", "crln" ] );
 
 while (my ($b, $def) = each %boolopts) {
   my $getter = "get_". $b;
@@ -37,6 +37,8 @@ while (my ($b, $def) = each %intopts) {
   is ($obj->$getter, $def, "default $b");
   $obj->$b(8);
   is ($obj->$getter, 8, "set $b to 8");
+  eval { $obj->$b(-1) };
+  like($@, qr/Invalid YAML::Safe->$b value -1/, "good error with -1");
 }
 
 while (my ($b, $defa) = each %stropts) {
@@ -44,8 +46,11 @@ while (my ($b, $defa) = each %stropts) {
   my $def = shift @$defa;
   my @vals = @$defa;
   is ($obj->$getter, $def, "default $b");
+  # note "$b: $def | ",join" ",@vals;
   for (@vals) {
     $obj->$b($_);
     is ($obj->$getter, $_, "set $b to $_");
   }
+  eval { $obj->$b("42") };
+  like($@, qr/Invalid YAML::Safe->$b value 42/, "good $b error with 42");
 }
