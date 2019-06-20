@@ -87,7 +87,21 @@ typedef struct {
     HV *anchors;
     HV *shadows;
 } perl_yaml_dumper_t;
+
+PERL_STATIC_INLINE YAML*
+yaml_new ()
+{
+  return (YAML*)calloc(1, sizeof(YAML));
+}
 #endif
+
+PERL_STATIC_INLINE YAML*
+yaml_init (YAML *self)
+{
+  Zero (self, 1, YAML);
+  self->flags = F_UNICODE;
+  return self;
+}
 
 int
 Dump(YAML *);

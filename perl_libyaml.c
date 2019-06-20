@@ -71,11 +71,6 @@ static const char* options[] =
   };
 static int numoptions = sizeof(options)/sizeof(options[0]);
 
-INLINE void
-yaml_init (YAML *self)
-{
-  Zero (self, 1, YAML);
-}
 #endif
 
 static SV *
@@ -207,6 +202,7 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
       yaml_parser_set_encoding(parser, self->encoding);
 
     /* As with YAML::Tiny. Default: strict Load */
+    /* allow while parsing a quoted scalar found unknown escape character */
     parser->problem_nonstrict = self->flags & F_NONSTRICT;
 }
 

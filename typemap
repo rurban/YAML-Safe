@@ -11,8 +11,8 @@ T_YAML
             croak (\"object is not of type YAML::Safe\");
         /**/
         $var = (YAML *)SvPVX (SvRV ($arg));
+        assert($var);
 
 OUTPUT
 
 T_YAML
-	sv_setref_pv($arg, \"YAML::Safe\", (void*)$var);

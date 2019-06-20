@@ -53,6 +53,7 @@ t/native.t
 t/nonstrict.t
 t/null.t
 t/numbers.t
+t/options.t
 t/path-class.t
 t/pl_sv_undef.t
 t/private.t

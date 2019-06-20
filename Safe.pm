@@ -175,17 +175,18 @@ YAML::Safe - Safe Perl YAML Serialization using XS and libyaml
 
 =head1 Description
 
-This module is a refactoring of L<YAML::XS>, the old Perl XS binding to
-C<libyaml> which offers Perl somewhat acceptable YAML support to date.
-YAML::XS never produced code which could be read from YAML, and thus
-was unsuitable to be used as YAML replacement for core and CPAN.
+This module is a refactoring of L<YAML::XS>, the old Perl XS binding
+to C<libyaml> which offers Perl somewhat acceptable YAML support to
+date.  YAML::XS never produced code which could be read from YAML, and
+thus was unsuitable to be used as YAML replacement for core and CPAN.
 It also required reading and setting options from global variables.
 
-Kirill Siminov's C<libyaml> is a good YAML library implementation. The C
-library is written precisely to the YAML 1.1 specification, and offers YAML
-1.2 support. It was originally bound to Python and was later bound to Ruby.
-C<libsyck> is written a bit more elegant, has less bugs, is not as strict as
-libyaml, but misses some YAML features. It can only do YAML 1.0
+Kirill Siminov's C<libyaml> is a good YAML library implementation. The
+C library is written precisely to the YAML 1.1 specification, and
+offers YAML 1.2 support. It was originally bound to Python and was
+later bound to Ruby.  C<libsyck> is written a bit more elegant, has
+less bugs, is not as strict as libyaml, but misses some YAML
+features. It can only do YAML 1.0
 
 This module exports the functions C<Dump> and C<Load>, and do work as
 functions exactly like L<YAML::XS> and C<YAML.pm>'s corresponding
@@ -231,10 +232,9 @@ Create a YAML loader or dumper object with some options.
 
 =item SafeClass "classname", ...
 
-Register a string or list of strings to the list of allowed classes to the
-C<Safe{Load,Dump}> methods. Without any SafeClass added, no custom C<!>
-classes are allow in the YAML.
-Regexp are not supported.
+Register a string or list of strings to the list of allowed classes to
+the C<Safe{Load,Dump}> methods. Without any SafeClass added, no custom
+C<!> classes are allow in the YAML.  Regexp are not supported.
 
 =item SafeLoad
 
@@ -290,16 +290,18 @@ via getter and setter methods.
 
 =item C<nonstrict>
 
-Permit certain reader errors to loosely match other YAML module semantics. In
-detail: Allow B<"control characters are not allowed">. Note that any error is
-stored and returned, just not immediately.
+Permit certain reader errors to loosely match other YAML module
+semantics. In detail: Allow B<"control characters are not allowed">
+with while parsing a quoted scalar found unknown escape
+character. Note that any error is stored and returned, just not
+immediately. This is needed for cpan distroprefs.
 
-However the reader error B<"invalid trailing UTF-8 octet"> and all other utf8
-strictness violations are still fatal.
+However the reader error B<"invalid trailing UTF-8 octet"> and all
+other utf8 strictness violations are still fatal.
 
-And if the structure of the YAML document cannot be parsed, i.e. a required
-value consists only of invalid control characters, the loader returns an
-error, unlike with non-strict YAML modules.
+And if the structure of the YAML document cannot be parsed, i.e. a
+required value consists only of invalid control characters, the loader
+returns an error, unlike with non-strict YAML modules.
 
 =item C<loadcode>
 
@@ -315,20 +317,21 @@ via globals variables or as optional getter and setter methods.
 
 =item C<dumpcode>
 
-If enabled supports Dump of CV code blocks via C<YAML::Safe::coderef2text()>.
+If enabled supports Dump of CV code blocks via
+C<YAML::Safe::coderef2text()>.
 
 =item C<quotenum>
 
-When true (the default) strings that look like numbers but have not been
-numified will be quoted when dumping.
+When true (the default) strings that look like numbers but have not
+been numified will be quoted when dumping.
 
-This ensures leading that things like leading zeros and other formatting are
-preserved.
+This ensures leading that things like leading zeros and other
+formatting are preserved.
 
 =item C<noindentmap>
 
-If enabled fallback to the old C<YAML::Safe> behavior to omit
-the indentation of map keys, which arguably violates the YAML spec, is
+If enabled fallback to the old C<YAML::Safe> behavior to omit the
+indentation of map keys, which arguably violates the YAML spec, is
 different to all other YAML libraries and causes C<YAML.pm> to fail.
 
 Disabled
@@ -371,21 +374,22 @@ Set to any, cr, ln or crln.
 
 Default 0
 
-Set to 1 or a true value to embed the yaml into "...". If an explicit document
-end is required.
+Set to 1 or a true value to embed the yaml into "...". If an explicit
+document end is required.
 
 =back
 
 =head1 Using YAML::Safe with Unicode
 
-Handling unicode properly in Perl can be a pain. YAML::Safe only deals with
-streams of utf8 octets. Just remember this:
+Handling unicode properly in Perl can be a pain. YAML::Safe only deals
+with streams of utf8 octets. Just remember this:
 
     $perl = Load($utf8_octets);
     $utf8_octets = Dump($perl);
 
-There are many, many places where things can go wrong with unicode. If you are
-having problems, use Devel::Peek on all the possible data points.
+There are many, many places where things can go wrong with unicode. If
+you are having problems, use Devel::Peek on all the possible data
+points.
 
 =head1 See Also
 
@@ -413,8 +417,8 @@ based on YAML::XS by Ingy döt Net <ingy@cpan.org>
 Copyright 2007-2016. Ingy döt Net.
 Copyright 2015-2019. Reini Urban.
 
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 See L<http://www.perl.com/perl/misc/Artistic.html>
 

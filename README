@@ -112,8 +112,10 @@ Configuration
 
     "nonstrict"
         Permit certain reader errors to loosely match other YAML module
-        semantics. In detail: Allow "control characters are not allowed".
+        semantics. In detail: Allow "control characters are not allowed"
+        with while parsing a quoted scalar found unknown escape character.
         Note that any error is stored and returned, just not immediately.
+        This is needed for cpan distroprefs.
 
         However the reader error "invalid trailing UTF-8 octet" and all
         other utf8 strictness violations are still fatal.

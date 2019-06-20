@@ -170,7 +170,7 @@ SV* new (char *klass)
         dMY_CXT;
         SV *pv = NEWSV (0, sizeof (YAML));
         SvPOK_only (pv);
-        Zero (SvPVX (pv), 1, YAML);
+        yaml_init ((YAML*)SvPVX (pv));
         RETVAL = sv_bless (newRV (pv), gv_stashpv (klass, 1));
     OUTPUT: RETVAL
 
@@ -375,4 +375,3 @@ SafeClass (YAML *self, ...)
           (void)hv_store(self->safeclasses, s, strlen(s), newSViv(1), 0);
         }
     OUTPUT: self
-
