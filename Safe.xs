@@ -47,8 +47,8 @@ Load (...)
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
         }
-        else if ((items == 1 && ix < 8 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
-                 (ix >= 3 && ix <= 4)) {  /* or Dump */
+        else if ((items == 1 && ix < 8) || /* no self needed */
+                 (ix >= 3 && ix <= 4)) {   /* and Dump, DumpFile can have more args */
           /* default options */
           self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = 0;
