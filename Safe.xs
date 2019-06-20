@@ -36,68 +36,74 @@ Load (...)
         int err = 0;
   PPCODE:
         /* check if called as method or function */
-        if ((items == 1 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
-            (ix >= 5 && ix <= 6 && SvROK(ST(0)))) {  /* Dump */
-          /* default options */
-          self = (YAML*)calloc(1, sizeof(YAML));
-          old_safe = 0;
-          yaml_arg = ST(0);
-          /*if (ix >= 5 && ix <= 6 && SvROK(ST(0)))*/
-          PL_markstack_ptr++;
-        } else if (items >= 2 &&
-                   SvOK(ST(1)) &&
-                   SvROK(ST(0)) &&
-                   SvOBJECT(SvRV(ST(0))) &&
-                   sv_derived_from (ST(0), "YAML::Safe")) {
+        if (items >= 2 &&
+            SvOK(ST(1)) &&
+            SvROK(ST(0)) &&
+            SvOBJECT(SvRV(ST(0))) &&
+            sv_derived_from (ST(0), "YAML::Safe")) {
           self = (YAML*)SvPVX(SvRV(ST(0)));
           if (!self)
             self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = self->flags & F_SAFEMODE;
           yaml_arg = ST(1);
-          PL_markstack_ptr++;
+        }
+        else if ((items == 1 && !SvROK(ST(0)) && SvOK(ST(0))) || /* no self */
+                 (ix >= 5 && ix <= 6)) {  /* or Dump */
+          /* default options */
+          self = (YAML*)calloc(1, sizeof(YAML));
+          old_safe = 0;
+          yaml_arg = ST(0);
         } else {
           err = 1;
         }
+        PL_markstack_ptr++;
         /* set or unset safemode */
         switch (ix) {
-        case 1: self->flags &= ~F_SAFEMODE;
-                if (err)
+        case 1: if (err)
                   croak ("Usage: Load(YAML::Safe*, str) or Load(str)");
+                self->flags &= ~F_SAFEMODE;
                 ret = Load(self, yaml_arg);
                 break;
-        case 2: self->flags &= ~F_SAFEMODE;
+        case 2: 
                 if (err)
                   croak ("Usage: LoadFile(YAML::Safe*, str|io) or LoadFile(str|io)");
+                self->flags &= ~F_SAFEMODE;
                 ret = LoadFile(self, yaml_arg);
                 break;
-        case 3: self->flags |=  F_SAFEMODE;
+        case 3: 
                 if (err)
                   croak ("Usage: SafeLoad(YAML::Safe*, str|io)");
+                self->flags |=  F_SAFEMODE;
                 ret = Load(self, yaml_arg);
                 break;
-        case 4: self->flags |=  F_SAFEMODE;
+        case 4: 
                 if (err)
                   croak ("Usage: SafeLoadFile(YAML::Safe*, str|io)");
+                self->flags |=  F_SAFEMODE;
                 ret = LoadFile(self, yaml_arg);
                 break;
-        case 5: self->flags &= ~F_SAFEMODE;
+        case 5: 
                 if (err)
-                  croak ("Usage: Dump(YAML::Safe*, ...) or Dump(ref)");
+                  croak ("Usage: Dump(YAML::Safe*, ...) or Dump(...)");
+                self->flags &= ~F_SAFEMODE;
                 ret = Dump(self);
                 break;
-        case 6: self->flags &= ~F_SAFEMODE;
+        case 6: 
                 if (err)
                   croak ("Usage: DumpFile(YAML::Safe*, str|io, ...) or DumpFile(str|io, ...)");
+                self->flags &= ~F_SAFEMODE;
                 ret = DumpFile(self, yaml_arg);
                 break;
-        case 7: self->flags |=  F_SAFEMODE;
+        case 7: 
                 if (err)
                   croak ("Usage: SafeDump(YAML::Safe*, ...)");
+                self->flags |=  F_SAFEMODE;
                 ret = Dump(self);
                 break;
-        case 8: self->flags |=  F_SAFEMODE;
+        case 8: 
                 if (err)
                   croak ("Usage: SafeDumpFile(YAML::Safe*, str|io, ...)");
+                self->flags |=  F_SAFEMODE;
                 ret = DumpFile(self, yaml_arg);
                 break;
         }
