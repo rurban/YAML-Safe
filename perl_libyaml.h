@@ -104,16 +104,16 @@ void
 yaml_destroy (YAML *self);
 
 int
-Dump(YAML *);
+Dump(YAML*, int);
 
 int
-DumpFile(YAML *, SV *);
+DumpFile(YAML*, SV*, int);
 
 int
-Load(YAML *, SV *);
+Load(YAML*, SV*);
 
 int
-LoadFile(YAML *, SV *);
+LoadFile(YAML*, SV*);
 
 void
 set_parser_options(YAML *self, yaml_parser_t *parser);

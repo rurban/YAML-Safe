@@ -377,7 +377,7 @@ LoadFile(YAML *self, SV *sv_file)
  * It takes a yaml stream and turns it into 0 or more Perl objects.
  */
 int
-Load(YAML *self, SV *yaml_sv)
+Load(YAML *self, SV* yaml_sv)
 {
     const unsigned char *yaml_str;
     STRLEN yaml_len;
@@ -889,7 +889,7 @@ load_glob(YAML *self)
  * and return a YAML stream (as a string)
  */
 int
-Dump(YAML *self)
+Dump(YAML *self, int yaml_ix)
 {
     dXSARGS;
     yaml_event_t event_stream_start;
@@ -917,7 +917,7 @@ Dump(YAML *self)
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
     self->shadows = (HV *)sv_2mortal((SV *)newHV());
 
-    for (i = 0; i < items; i++) {
+    for (i = yaml_ix; i < items; i++) {
         self->anchor = 0;
 
         dump_prewalk(self, ST(i));
@@ -948,7 +948,7 @@ Dump(YAML *self)
  * Dump zero or more Perl objects into the file
  */
 int
-DumpFile(YAML *self, SV *sv_file)
+DumpFile(YAML *self, SV *sv_file, int yaml_ix)
 {
     dXSARGS;
     yaml_event_t event_stream_start;
@@ -1027,8 +1027,8 @@ DumpFile(YAML *self, SV *sv_file)
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
     self->shadows = (HV *)sv_2mortal((SV *)newHV());
 
-    /* ST(1) is the file */
-    for (i = 1; i < items; i++) {
+    /* ST(yaml_ix) is the file */
+    for (i = yaml_ix+1; i < items; i++) {
         self->anchor = 0;
 
         dump_prewalk(self, ST(i));

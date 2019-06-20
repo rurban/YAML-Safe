@@ -31,7 +31,8 @@ Load (...)
         SafeDumpFile = 12
   PREINIT:
 	YAML *self;
-        SV *yaml_arg;
+        SV* yaml_arg;
+        int yaml_ix = 0;
         int ret, old_safe;
         int err = 0;
   PPCODE:
@@ -45,14 +46,15 @@ Load (...)
           if (!self)
             self = (YAML*)calloc(1, sizeof(YAML));
           old_safe = self->flags & F_SAFEMODE;
+          yaml_ix = 1;
           yaml_arg = ST(1);
         }
         else if ((items == 1 && ix < 8) || /* no self needed */
                  (ix >= 3 && ix <= 4)) {   /* and Dump, DumpFile can have more args */
           /* default options */
           self = (YAML*)calloc(1, sizeof(YAML));
-          old_safe = 0;
           yaml_arg = ST(0);
+          old_safe = 0;
         } else {
           err = 1;
         }
@@ -72,12 +74,12 @@ Load (...)
         case 3: if (err)
                   croak ("Usage: Dump([YAML::Safe,] ...)");
                 self->flags &= ~F_SAFEMODE;
-                ret = Dump(self);
+                ret = Dump(self, yaml_ix);
                 break;
         case 4: if (err)
                   croak ("Usage: DumpFile([YAML::Safe,] filename|io, ...)");
                 self->flags &= ~F_SAFEMODE;
-                ret = DumpFile(self, yaml_arg);
+                ret = DumpFile(self, yaml_arg, yaml_ix);
                 break;
         case 9: if (err)
                   croak ("Usage: SafeLoad(YAML::Safe, str)");
@@ -92,12 +94,12 @@ Load (...)
         case 11: if (err)
                   croak ("Usage: SafeDump(YAML::Safe, ...)");
                 self->flags |=  F_SAFEMODE;
-                ret = Dump(self);
+                ret = Dump(self, yaml_ix);
                 break;
         case 12: if (err)
                   croak ("Usage: SafeDumpFile(YAML::Safe*, filename|io, ...)");
                 self->flags |=  F_SAFEMODE;
-                ret = DumpFile(self, yaml_arg);
+                ret = DumpFile(self, yaml_arg, yaml_ix);
                 break;
         }
         /* restore old safemode */
