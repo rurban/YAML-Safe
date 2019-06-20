@@ -1546,12 +1546,9 @@ yaml_destroy (YAML *self)
 {
     if (!self)
         return;
-    if (self->anchors)
-        SvREFCNT_dec_NN (self->anchors);
-    if (self->shadows)
-        SvREFCNT_dec_NN (self->shadows);
-    if (self->perlio)
-        SvREFCNT_dec_NN (self->perlio);
+    SvREFCNT_dec (self->anchors);
+    SvREFCNT_dec (self->shadows);
+    SvREFCNT_dec (self->perlio);
     if (self->filename)
         Safefree (self->filename);
     if (self->parser)
@@ -1560,4 +1557,5 @@ yaml_destroy (YAML *self)
         yaml_event_delete (self->event);
     if (self->emitter)
         yaml_emitter_delete (self->emitter);
+    Zero(self, 1, YAML);
 }
