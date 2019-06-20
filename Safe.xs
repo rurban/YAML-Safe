@@ -43,8 +43,7 @@ Load (...)
             SvOBJECT(SvRV(ST(0))) &&
             sv_derived_from (ST(0), "YAML::Safe")) {
           self = (YAML*)SvPVX(SvRV(ST(0)));
-          if (!self)
-            self = (YAML*)calloc(1, sizeof(YAML));
+          assert(self);
           old_safe = self->flags & F_SAFEMODE;
           yaml_ix = 1;
           yaml_arg = ST(1);

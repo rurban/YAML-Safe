@@ -195,6 +195,7 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
 {
     self->document = 0;
     self->filename = NULL;
+    self->parser->read_handler = NULL; /* we allow setting it mult. times */
 
     if ((int)self->encoding)
       yaml_parser_set_encoding(parser, self->encoding);
@@ -309,10 +310,9 @@ LoadFile(YAML *self, SV *sv_file)
     if (!self->parser) {
       Newx(self->parser,1,yaml_parser_t);
       Newx(self->event,1,yaml_event_t);
+      yaml_parser_initialize(self->parser);
     }
-    yaml_parser_initialize(self->parser);
     set_parser_options(self, self->parser);
-
     if (SvROK(sv_file)) { /* pv mg or io or gv */
         SV *rv = SvRV(sv_file);
 
@@ -386,8 +386,8 @@ Load(YAML *self, SV* yaml_sv)
     if (!self->parser) {
       Newx(self->parser,1,yaml_parser_t);
       Newx(self->event,1,yaml_event_t);
+      yaml_parser_initialize(self->parser);
     }
-    yaml_parser_initialize(self->parser);
     set_parser_options(self, self->parser);
     if (DO_UTF8(yaml_sv)) { /* overrides encoding setting */
       if (self->encoding == YAML_ANY_ENCODING)
@@ -902,9 +902,9 @@ Dump(YAML *self, int yaml_ix)
     if (!self->emitter) {
       Newx(self->emitter,1,yaml_emitter_t);
       Newx(self->event,1,yaml_event_t);
+      yaml_emitter_initialize(self->emitter);
+      set_emitter_options(self, self->emitter);
     }
-    yaml_emitter_initialize(self->emitter);
-    set_emitter_options(self, self->emitter);
     yaml_emitter_set_output(
         self->emitter,
         &append_output,
