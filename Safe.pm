@@ -265,7 +265,8 @@ via getter and setter methods.
 
 =item C<enablecode>
 
-If enabled turns on handling of code blocks.
+If enabled turns on handling of code blocks for the loader and dumper.
+It sets both the C<loadcode> and C<dumpcode> option.
 
 =item C<encoding>
 

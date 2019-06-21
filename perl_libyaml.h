@@ -35,15 +35,16 @@
 
 #define F_UNICODE          0x00000001
 #define F_DISABLEBLESSED   0x00000002
-#define F_ENABLECODE       0x00000004
+#define F_QUOTENUM         0x00000004
 #define F_NONSTRICT        0x00000008
 #define F_LOADCODE         0x00000010
 #define F_DUMPCODE         0x00000020
-#define F_QUOTENUM         0x00000040
-#define F_NOINDENTMAP      0x00000080
-#define F_CANONICAL        0x00000100
-#define F_OPENENDED        0x00000200
-#define F_SAFEMODE         0x00000400
+/* both: */
+#define F_ENABLECODE       0x00000030
+#define F_NOINDENTMAP      0x00000040
+#define F_CANONICAL        0x00000080
+#define F_OPENENDED        0x00000100
+#define F_SAFEMODE         0x00000200
 
 typedef enum {
     YAML_BOOLEAN_NONE = 0,

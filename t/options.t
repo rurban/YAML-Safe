@@ -5,8 +5,8 @@ my $obj = YAML::Safe->new;
 
 my %boolopts = (
   "disableblessed" => 0,
-  "enablecode" => 0,
   "nonstrict" => 0,
+  "enablecode" => 0,
   "loadcode" => 0,
   "dumpcode" => 0,
   "quotenum" => 0,
@@ -28,8 +28,8 @@ while (my ($b, $def) = each %boolopts) {
   is ($obj->$getter, $def == 0 ? '' : 1, "default $b is $def");
   $obj->$b; # turns it on
   is ($obj->$getter, 1, "$b turned on");
-  $obj->$b($def == 0 ? 1 : undef); # switch it
-  is ($obj->$getter, $def == 0 ? 1 : '', "$b switched");
+  $obj->$b($def == 0 ? 0 : 1); # switch it
+  is ($obj->$getter, $def == 0 ? '' : 1, "$b switched");
 }
 
 while (my ($b, $def) = each %intopts) {

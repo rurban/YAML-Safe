@@ -165,7 +165,6 @@ unicode (YAML *self, int enable = 1)
     ALIAS:
         unicode         = F_UNICODE
         disableblessed  = F_DISABLEBLESSED
-        enablecode      = F_ENABLECODE
         nonstrict       = F_NONSTRICT
         loadcode        = F_LOADCODE
         dumpcode        = F_DUMPCODE
@@ -173,6 +172,7 @@ unicode (YAML *self, int enable = 1)
         noindentmap     = F_NOINDENTMAP
         canonical       = F_CANONICAL
         openended       = F_OPENENDED
+        enablecode      = F_ENABLECODE
     CODE:
         (void)RETVAL;
         if (enable)

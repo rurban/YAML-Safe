@@ -643,7 +643,16 @@ load_scalar(YAML *self)
             ) croak("%sbad tag found for scalar: '%s'", ERRMSG, tag);
             klass = tag + strlen(prefix);
             if (!(self->flags & F_DISABLEBLESSED))
-                scalar = sv_setref_pvn(newSV(0), klass, string, strlen(string));
+                if (self->flags & F_SAFEMODE &&
+                    self->safeclasses &&
+                    hv_exists(self->safeclasses, klass, strlen(klass)))
+                {
+                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
+                                     "Unsafe class %s skipped loading", klass);
+                    scalar = newSVpvn(string, length);
+                } else {
+                    scalar = sv_setref_pvn(newSV(0), klass, string, strlen(string));
+                }
             else
                 scalar = newSVpvn(string, length);
             SvUTF8_on(scalar);
@@ -790,7 +799,7 @@ load_code(YAML * self)
 
     code = newSVpvn(string, length);
     SvUTF8_on(code);
-    if (!(self->flags & F_ENABLECODE)) {
+    if (!(self->flags & F_LOADCODE)) {
         string = "{}";
         length = 2;
     }
@@ -1416,7 +1425,7 @@ dump_code(YAML *self, SV *node)
     yaml_char_t *tag;
     yaml_scalar_style_t style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
     char *string = "{ \"DUMMY\" }";
-    if (self->flags & F_ENABLECODE) {
+    if (self->flags & F_DUMPCODE) {
         /* load_module(PERL_LOADMOD_NOIMPORT, newSVpv("B::Deparse", 0), NULL);
          */
         SV *result;
