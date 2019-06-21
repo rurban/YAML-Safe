@@ -64,7 +64,7 @@ static const char* options[] =
    "indent",          /* int, default: 2 */
    "wrapwidth",       /* int, default: 80 */
    "canonical",       /* bool, default: 0 */
-   "unicode",         /* bool, default: 1 */
+   "unicode",         /* bool, default: 1 If unescaped Unicode characters are allowed */
    "encoding",        /* "any", "utf8", "utf16le" or "utf16be" */
    "linebreak",       /* "any", "cr", "ln" or "crln" */
    "openended",       /* bool, default: 0 */
@@ -152,7 +152,7 @@ loader_error_msg(YAML *self, char *problem)
 {
     char *msg;
     if (!problem)
-        problem = (char *)self->parser->problem;
+        problem = (char *)self->parser.problem;
     if (self->filename)
       msg = form("%s%s at file %s",
                  ERRMSG,
@@ -165,23 +165,23 @@ loader_error_msg(YAML *self, char *problem)
                  (problem ? problem : "A problem"),
                  self->document
                  );
-    if (self->parser->problem_mark.line ||
-        self->parser->problem_mark.column)
+    if (self->parser.problem_mark.line ||
+        self->parser.problem_mark.column)
         msg = form("%s, line: %ld, column: %ld\n",
                    msg,
-                   (long)self->parser->problem_mark.line + 1,
-                   (long)self->parser->problem_mark.column + 1
+                   (long)self->parser.problem_mark.line + 1,
+                   (long)self->parser.problem_mark.column + 1
                    );
-    else if (self->parser->problem_offset)
-        msg = form("%s, offset: %ld\n", msg, (long)self->parser->problem_offset);
+    else if (self->parser.problem_offset)
+        msg = form("%s, offset: %ld\n", msg, (long)self->parser.problem_offset);
     else
         msg = form("%s\n", msg);
-    if (self->parser->context)
+    if (self->parser.context)
         msg = form("%s%s at line: %ld, column: %ld\n",
                    msg,
-                   self->parser->context,
-                   (long)self->parser->context_mark.line + 1,
-                   (long)self->parser->context_mark.column + 1
+                   self->parser.context,
+                   (long)self->parser.context_mark.line + 1,
+                   (long)self->parser.context_mark.column + 1
         );
 
     return msg;
@@ -195,7 +195,7 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
 {
     self->document = 0;
     self->filename = NULL;
-    self->parser->read_handler = NULL; /* we allow setting it mult. times */
+    self->parser.read_handler = NULL; /* we allow setting it mult. times */
 
     if ((int)self->encoding)
       yaml_parser_set_encoding(parser, self->encoding);
@@ -211,19 +211,18 @@ set_parser_options(YAML *self, yaml_parser_t *parser)
 void
 set_emitter_options(YAML *self, yaml_emitter_t *emitter)
 {
-    yaml_emitter_set_unicode(emitter, 1);
-    if (!emitter->best_indent) {
-      yaml_emitter_set_indent(emitter, 2);
-    }
-    if (!emitter->best_width) {
-      yaml_emitter_set_width(emitter, 80);
-    }
+    yaml_emitter_set_unicode(emitter, self->flags & F_UNICODE);
+    yaml_emitter_set_indent(emitter, self->indent);
+    yaml_emitter_set_width(emitter, self->wrapwidth);
     if ((int)self->encoding) {
       yaml_emitter_set_encoding(emitter, self->encoding);
     }
-
-    emitter->indentless_map = self->flags & F_NOINDENTMAP;
-    emitter->open_ended = self->flags & F_OPENENDED;
+    if ((int)self->linebreak) {
+      yaml_emitter_set_break(emitter, self->linebreak);
+    }
+    emitter->indentless_map = self->flags & F_NOINDENTMAP ? 1 : 0;
+    emitter->open_ended = self->flags & F_OPENENDED ? 1 : 0;
+    yaml_emitter_set_canonical(emitter, self->flags & F_CANONICAL);
 }
 
 static int
@@ -237,12 +236,12 @@ load_impl(YAML *self)
     if (0 && (items || ax)) {} /* XXX Quiet the -Wall warnings for now. */
 
     /* Get the first event. Must be a STREAM_START */
-    if (!yaml_parser_parse(self->parser, self->event))
+    if (!yaml_parser_parse(&self->parser, &self->event))
         goto load_error;
-    if (self->event->type != YAML_STREAM_START_EVENT)
+    if (self->event.type != YAML_STREAM_START_EVENT)
         croak("%sExpected STREAM_START_EVENT; Got: %d != %d",
             ERRMSG,
-            self->event->type,
+            self->event.type,
             YAML_STREAM_START_EVENT
          );
 
@@ -254,28 +253,28 @@ load_impl(YAML *self)
         while (1) {
             self->document++;
             /* We are through with the previous event - delete it! */
-            yaml_event_delete(self->event);
-            if (!yaml_parser_parse(self->parser, self->event))
+            yaml_event_delete(&self->event);
+            if (!yaml_parser_parse(&self->parser, &self->event))
                 goto load_error;
-            if (self->event->type == YAML_STREAM_END_EVENT)
+            if (self->event.type == YAML_STREAM_END_EVENT)
                 break;
             node = load_node(self);
             /* We are through with the previous event - delete it! */
-            yaml_event_delete(self->event);
+            yaml_event_delete(&self->event);
             hv_clear(self->anchors);
             if (! node) break;
             XPUSHs(sv_2mortal(node));
-            if (!yaml_parser_parse(self->parser, self->event))
+            if (!yaml_parser_parse(&self->parser, &self->event))
                 goto load_error;
-            if (self->event->type != YAML_DOCUMENT_END_EVENT)
+            if (self->event.type != YAML_DOCUMENT_END_EVENT)
                 croak("%sExpected DOCUMENT_END_EVENT", ERRMSG);
         }
 
         /* Make sure the last event is a STREAM_END */
-        if (self->event->type != YAML_STREAM_END_EVENT)
+        if (self->event.type != YAML_STREAM_END_EVENT)
             croak("%sExpected STREAM_END_EVENT; Got: %d != %d",
                 ERRMSG,
-                self->event->type,
+                self->event.type,
                 YAML_STREAM_END_EVENT
              );
 
@@ -283,11 +282,11 @@ load_impl(YAML *self)
 
     XCPT_CATCH
     {
-        yaml_parser_delete(self->parser);
+        yaml_parser_delete(&self->parser);
         XCPT_RETHROW;
     }
 
-    yaml_parser_delete(self->parser);
+    yaml_parser_delete(&self->parser);
     PUTBACK;
     return 1;
 
@@ -307,23 +306,19 @@ LoadFile(YAML *self, SV *sv_file)
     STRLEN len;
     int ret;
 
-    if (!self->parser) {
-      Newx(self->parser,1,yaml_parser_t);
-      Newx(self->event,1,yaml_event_t);
-      yaml_parser_initialize(self->parser);
-    }
-    set_parser_options(self, self->parser);
+    yaml_parser_initialize(&self->parser);
+    set_parser_options(self, &self->parser);
     if (SvROK(sv_file)) { /* pv mg or io or gv */
         SV *rv = SvRV(sv_file);
 
         if (SvTYPE(rv) == SVt_PVIO) {
             self->perlio = IoIFP(rv);
-            yaml_parser_set_input(self->parser,
+            yaml_parser_set_input(&self->parser,
                                   &yaml_perlio_read_handler,
                                   self);
         } else if (SvTYPE(rv) == SVt_PVGV && GvIO(rv)) {
             self->perlio = IoIFP(GvIOp(rv));
-            yaml_parser_set_input(self->parser,
+            yaml_parser_set_input(&self->parser,
                                   &yaml_perlio_read_handler,
                                   self);
         } else if (SvMAGIC(rv)) {
@@ -347,16 +342,16 @@ LoadFile(YAML *self, SV *sv_file)
             return 0;
         }
         self->filename = (char *)fname;
-        yaml_parser_set_input_file(self->parser, file);
+        yaml_parser_set_input_file(&self->parser, file);
     } else if (SvTYPE(sv_file) == SVt_PVIO) {
         self->perlio = IoIFP(sv_file);
-        yaml_parser_set_input(self->parser,
+        yaml_parser_set_input(&self->parser,
                               &yaml_perlio_read_handler,
                               self);
     } else if (SvTYPE(sv_file) == SVt_PVGV
                && GvIO(sv_file)) {
         self->perlio = IoIFP(GvIOp(sv_file));
-        yaml_parser_set_input(self->parser,
+        yaml_parser_set_input(&self->parser,
                               &yaml_perlio_read_handler,
                               self);
     } else {
@@ -383,19 +378,15 @@ Load(YAML *self, SV* yaml_sv)
     STRLEN yaml_len;
 
     yaml_str = (const unsigned char *)SvPV_const(yaml_sv, yaml_len);
-    if (!self->parser) {
-      Newx(self->parser,1,yaml_parser_t);
-      Newx(self->event,1,yaml_event_t);
-      yaml_parser_initialize(self->parser);
-    }
-    set_parser_options(self, self->parser);
+    yaml_parser_initialize(&self->parser);
+    set_parser_options(self, &self->parser);
     if (DO_UTF8(yaml_sv)) { /* overrides encoding setting */
       if (self->encoding == YAML_ANY_ENCODING)
-        self->parser->encoding = YAML_UTF8_ENCODING;
+        self->parser.encoding = YAML_UTF8_ENCODING;
     } /* else check the BOM. don't check for decoded utf8. */
 
     yaml_parser_set_input_string(
-        self->parser,
+        &self->parser,
         yaml_str,
         yaml_len
     );
@@ -411,23 +402,23 @@ load_node(YAML *self)
 {
     SV* return_sv = NULL;
     /* This uses stack, but avoids (severe!) memory leaks */
-    yaml_event_t *uplevel_event;
+    yaml_event_t uplevel_event;
 
     uplevel_event = self->event;
 
     /* Get the next parser event */
-    if (!yaml_parser_parse(self->parser, self->event))
+    if (!yaml_parser_parse(&self->parser, &self->event))
         goto load_error;
 
     /* These events don't need yaml_event_delete */
     /* Some kind of error occurred */
-    if (self->event->type == YAML_NO_EVENT)
+    if (self->event.type == YAML_NO_EVENT)
         goto load_error;
 
     /* Return NULL when we hit the end of a scope */
-    if (self->event->type == YAML_DOCUMENT_END_EVENT ||
-        self->event->type == YAML_MAPPING_END_EVENT ||
-        self->event->type == YAML_SEQUENCE_END_EVENT)
+    if (self->event.type == YAML_DOCUMENT_END_EVENT ||
+        self->event.type == YAML_MAPPING_END_EVENT ||
+        self->event.type == YAML_SEQUENCE_END_EVENT)
     {
         /* restore the uplevel event, so it can be properly deleted */
         self->event = uplevel_event;
@@ -435,12 +426,12 @@ load_node(YAML *self)
     }
 
     /* The rest all need cleanup */
-    switch (self->event->type) {
+    switch (self->event.type) {
         char *tag;
 
         /* Handle loading a mapping */
         case YAML_MAPPING_START_EVENT:
-            tag = (char *)self->event->data.mapping_start.tag;
+            tag = (char *)self->event.data.mapping_start.tag;
 
             if (tag) {
                 /* Handle mapping tagged as a Perl hard reference */
@@ -474,10 +465,10 @@ load_node(YAML *self)
             break;
 
         default:
-            croak("%sInvalid event '%d' at top level", ERRMSG, (int) self->event->type);
+            croak("%sInvalid event '%d' at top level", ERRMSG, (int) self->event.type);
     }
 
-    yaml_event_delete(self->event);
+    yaml_event_delete(&self->event);
 
     /* restore the uplevel event, so it can be properly deleted */
     self->event = uplevel_event;
@@ -498,10 +489,10 @@ load_mapping(YAML *self, char *tag)
     SV *value_node;
     HV *hash = newHV();
     SV *hash_ref = (SV *)newRV_noinc((SV *)hash);
-    char *anchor = (char *)self->event->data.mapping_start.anchor;
+    char *anchor = (char *)self->event.data.mapping_start.anchor;
 
     if (!tag)
-        tag = (char *)self->event->data.mapping_start.tag;
+        tag = (char *)self->event.data.mapping_start.tag;
 
     /* Store the anchor label if any */
     if (anchor)
@@ -555,8 +546,8 @@ load_sequence(YAML *self)
     SV *node;
     AV *array = newAV();
     SV *array_ref = (SV *)newRV_noinc((SV *)array);
-    char *anchor = (char *)self->event->data.sequence_start.anchor;
-    char *tag = (char *)self->event->data.mapping_start.tag;
+    char *anchor = (char *)self->event.data.sequence_start.anchor;
+    char *tag = (char *)self->event.data.mapping_start.tag;
     if (anchor)
       (void)hv_store(self->anchors, anchor, strlen(anchor), SvREFCNT_inc(array_ref), 0);
     while ((node = load_node(self))) {
@@ -599,11 +590,11 @@ static SV *
 load_scalar(YAML *self)
 {
     SV *scalar;
-    char *string = (char *)self->event->data.scalar.value;
-    STRLEN length = (STRLEN)self->event->data.scalar.length;
-    char *anchor = (char *)self->event->data.scalar.anchor;
-    char *tag = (char *)self->event->data.scalar.tag;
-    yaml_scalar_style_t style = self->event->data.scalar.style;
+    char *string = (char *)self->event.data.scalar.value;
+    STRLEN length = (STRLEN)self->event.data.scalar.length;
+    char *anchor = (char *)self->event.data.scalar.anchor;
+    char *tag = (char *)self->event.data.scalar.tag;
+    yaml_scalar_style_t style = self->event.data.scalar.style;
     if (tag) {
         if (strEQc(tag, YAML_STR_TAG)) {
             style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
@@ -740,10 +731,10 @@ static SV *
 load_regexp(YAML * self)
 {
     dSP;
-    char *string = (char *)self->event->data.scalar.value;
-    STRLEN length = (STRLEN)self->event->data.scalar.length;
-    char *anchor = (char *)self->event->data.scalar.anchor;
-    char *tag = (char *)self->event->data.scalar.tag;
+    char *string = (char *)self->event.data.scalar.value;
+    STRLEN length = (STRLEN)self->event.data.scalar.length;
+    char *anchor = (char *)self->event.data.scalar.anchor;
+    char *tag = (char *)self->event.data.scalar.tag;
     char *prefix = (char*)TAG_PERL_PREFIX "regexp:";
 
     SV *regexp = newSVpvn(string, length);
@@ -790,10 +781,10 @@ SV*
 load_code(YAML * self)
 {
     dSP;
-    char *string = (char *)self->event->data.scalar.value;
-    STRLEN length = (STRLEN)self->event->data.scalar.length;
-    char *anchor = (char *)self->event->data.scalar.anchor;
-    char *tag = (char *)self->event->data.scalar.tag;
+    char *string = (char *)self->event.data.scalar.value;
+    STRLEN length = (STRLEN)self->event.data.scalar.length;
+    char *anchor = (char *)self->event.data.scalar.anchor;
+    char *tag = (char *)self->event.data.scalar.tag;
     char *prefix = TAG_PERL_PREFIX "code:";
     SV *code;
 
@@ -843,7 +834,7 @@ load_code(YAML * self)
 static SV *
 load_alias(YAML *self)
 {
-    char *anchor = (char *)self->event->data.alias.anchor;
+    char *anchor = (char *)self->event.data.alias.anchor;
     SV **entry = hv_fetch(self->anchors, anchor, strlen(anchor), 0);
     if (entry)
         return SvREFCNT_inc(*entry);
@@ -857,7 +848,7 @@ SV *
 load_scalar_ref(YAML *self)
 {
     SV *value_node;
-    char *anchor = (char *)self->event->data.mapping_start.anchor;
+    char *anchor = (char *)self->event.data.mapping_start.anchor;
     SV *rv = newRV_noinc(&PL_sv_undef);
     if (anchor)
         (void)hv_store(self->anchors, anchor, strlen(anchor),
@@ -899,20 +890,16 @@ Dump(YAML *self, int yaml_ix)
 
     sp = mark;
 
-    if (!self->emitter) {
-      Newx(self->emitter,1,yaml_emitter_t);
-      Newx(self->event,1,yaml_event_t);
-      yaml_emitter_initialize(self->emitter);
-      set_emitter_options(self, self->emitter);
-    }
+    yaml_emitter_initialize(&self->emitter);
+    set_emitter_options(self, &self->emitter);
     yaml_emitter_set_output(
-        self->emitter,
+        &self->emitter,
         &append_output,
         (void *)yaml
     );
 
     yaml_stream_start_event_initialize(&event_stream_start, self->encoding);
-    yaml_emitter_emit(self->emitter, &event_stream_start);
+    yaml_emitter_emit(&self->emitter, &event_stream_start);
 
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
     self->shadows = (HV *)sv_2mortal((SV *)newHV());
@@ -929,8 +916,8 @@ Dump(YAML *self, int yaml_ix)
 
     /* End emitting and destroy the emitter object */
     yaml_stream_end_event_initialize(&event_stream_end);
-    yaml_emitter_emit(self->emitter, &event_stream_end);
-    yaml_emitter_delete(self->emitter);
+    yaml_emitter_emit(&self->emitter, &event_stream_end);
+    yaml_emitter_delete(&self->emitter);
 
     /* Put the YAML stream scalar on the XS output stack */
     if (yaml) {
@@ -960,23 +947,20 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
 
     sp = mark;
 
-    if (!self->emitter) {
-      Newx(self->emitter,1,yaml_emitter_t);
-    }
-    yaml_emitter_initialize(self->emitter);
-    set_emitter_options(self, self->emitter);
+    yaml_emitter_initialize(&self->emitter);
+    set_emitter_options(self, &self->emitter);
 
     if (SvROK(sv_file)) { /* pv mg or io or gv */
         SV *rv = SvRV(sv_file);
 
         if (SvTYPE(rv) == SVt_PVIO) {
             self->perlio = IoOFP(rv);
-            yaml_emitter_set_output(self->emitter,
+            yaml_emitter_set_output(&self->emitter,
                                     &yaml_perlio_write_handler,
                                     self);
         } else if (SvTYPE(rv) == SVt_PVGV && GvIO(rv)) {
             self->perlio = IoOFP(GvIOp(SvRV(sv_file)));
-            yaml_emitter_set_output(self->emitter,
+            yaml_emitter_set_output(&self->emitter,
                                     &yaml_perlio_write_handler,
                                     self);
         } else if (SvMAGIC(rv)) {
@@ -1000,15 +984,15 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
             return 0;
         }
         self->filename = (char *)fname;
-        yaml_emitter_set_output_file(self->emitter, file);
+        yaml_emitter_set_output_file(&self->emitter, file);
     } else if (SvTYPE(sv_file) == SVt_PVIO) {
         self->perlio = IoOFP(sv_file);
-        yaml_emitter_set_output(self->emitter,
+        yaml_emitter_set_output(&self->emitter,
                                 &yaml_perlio_write_handler,
                                 self);
     } else if (SvTYPE(sv_file) == SVt_PVGV && GvIO(sv_file)) {
         self->perlio = IoOFP(GvIOp(sv_file));
-        yaml_emitter_set_output(self->emitter,
+        yaml_emitter_set_output(&self->emitter,
                                 &yaml_perlio_write_handler,
                                 self);
     } else {
@@ -1019,7 +1003,7 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
 
     yaml_stream_start_event_initialize(&event_stream_start,
                                        self->encoding);
-    if (!yaml_emitter_emit(self->emitter, &event_stream_start)) {
+    if (!yaml_emitter_emit(&self->emitter, &event_stream_start)) {
         PUTBACK;
         return 0;
     }
@@ -1040,11 +1024,11 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
 
     /* End emitting and destroy the emitter object */
     yaml_stream_end_event_initialize(&event_stream_end);
-    if (!yaml_emitter_emit(self->emitter, &event_stream_end)) {
+    if (!yaml_emitter_emit(&self->emitter, &event_stream_end)) {
         PUTBACK;
         return 0;
     }
-    yaml_emitter_delete(self->emitter);
+    yaml_emitter_delete(&self->emitter);
     if (file)
         fclose(file);
     else if (SvTYPE(sv_file) == SVt_PVIO)
@@ -1121,10 +1105,10 @@ dump_document(YAML *self, SV *node)
     yaml_document_start_event_initialize(
         &event_document_start, NULL, NULL, NULL, 0
     );
-    yaml_emitter_emit(self->emitter, &event_document_start);
+    yaml_emitter_emit(&self->emitter, &event_document_start);
     dump_node(self, node);
     yaml_document_end_event_initialize(&event_document_end, 1);
-    yaml_emitter_emit(self->emitter, &event_document_end);
+    yaml_emitter_emit(&self->emitter, &event_document_end);
 }
 
 static void
@@ -1227,7 +1211,7 @@ get_yaml_anchor(YAML *self, SV *node)
         else {
             yaml_char_t *anchor = (yaml_char_t *)SvPV_nolen(*seen);
             yaml_alias_event_initialize(&event_alias, anchor);
-            yaml_emitter_emit(self->emitter, &event_alias);
+            yaml_emitter_emit(&self->emitter, &event_alias);
             return (yaml_char_t *) "";
         }
     }
@@ -1290,7 +1274,7 @@ dump_hash(
     yaml_mapping_start_event_initialize(
         &event_mapping_start, anchor, tag, 0, YAML_BLOCK_MAPPING_STYLE
     );
-    yaml_emitter_emit(self->emitter, &event_mapping_start);
+    yaml_emitter_emit(&self->emitter, &event_mapping_start);
 
     av = newAV();
     len = 0;
@@ -1313,7 +1297,7 @@ dump_hash(
     SvREFCNT_dec(av);
 
     yaml_mapping_end_event_initialize(&event_mapping_end);
-    yaml_emitter_emit(self->emitter, &event_mapping_end);
+    yaml_emitter_emit(&self->emitter, &event_mapping_end);
 }
 
 static void
@@ -1334,7 +1318,7 @@ dump_array(YAML *self, SV *node)
     yaml_sequence_start_event_initialize(
         &event_sequence_start, anchor, tag, 0, YAML_BLOCK_SEQUENCE_STYLE
     );
-    yaml_emitter_emit(self->emitter, &event_sequence_start);
+    yaml_emitter_emit(&self->emitter, &event_sequence_start);
 
     for (i = 0; i < array_size; i++) {
         SV **entry = av_fetch(array, i, 0);
@@ -1344,7 +1328,7 @@ dump_array(YAML *self, SV *node)
             dump_node(self, *entry);
     }
     yaml_sequence_end_event_initialize(&event_sequence_end);
-    yaml_emitter_emit(self->emitter, &event_sequence_end);
+    yaml_emitter_emit(&self->emitter, &event_sequence_end);
 }
 
 static void
@@ -1418,10 +1402,10 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
         quoted_implicit,
         style
     );
-    if (! yaml_emitter_emit(self->emitter, &event_scalar))
+    if (! yaml_emitter_emit(&self->emitter, &event_scalar))
         croak("%sEmit scalar '%s', error: %s\n",
             ERRMSG,
-            string, self->emitter->problem
+            string, self->emitter.problem
         );
 }
 
@@ -1459,7 +1443,7 @@ dump_code(YAML *self, SV *node)
         style
     );
 
-    yaml_emitter_emit(self->emitter, &event_scalar);
+    yaml_emitter_emit(&self->emitter, &event_scalar);
 }
 
 static SV *
@@ -1494,7 +1478,7 @@ dump_ref(YAML *self, SV *node)
         (unsigned char *)TAG_PERL_PREFIX "ref",
         0, YAML_BLOCK_MAPPING_STYLE
     );
-    yaml_emitter_emit(self->emitter, &event_mapping_start);
+    yaml_emitter_emit(&self->emitter, &event_mapping_start);
 
     yaml_scalar_event_initialize(
         &event_scalar,
@@ -1504,11 +1488,11 @@ dump_ref(YAML *self, SV *node)
         1, 1,
         YAML_PLAIN_SCALAR_STYLE
     );
-    yaml_emitter_emit(self->emitter, &event_scalar);
+    yaml_emitter_emit(&self->emitter, &event_scalar);
     dump_node(self, referent);
 
     yaml_mapping_end_event_initialize(&event_mapping_end);
-    yaml_emitter_emit(self->emitter, &event_mapping_end);
+    yaml_emitter_emit(&self->emitter, &event_mapping_end);
 }
 
 static int
@@ -1548,11 +1532,8 @@ yaml_destroy (YAML *self)
         return;
     if (self->filename)
         Safefree (self->filename);
-    if (self->parser)
-        yaml_parser_delete (self->parser);
-    if (self->event)
-        yaml_event_delete (self->event);
-    if (self->emitter)
-        yaml_emitter_delete (self->emitter);
+    yaml_parser_delete (&self->parser);
+    yaml_event_delete (&self->event);
+    yaml_emitter_delete (&self->emitter);
     Zero(self, 1, YAML);
 }

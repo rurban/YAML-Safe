@@ -275,10 +275,7 @@ encoding (YAML *self, char *value)
 char*
 get_linebreak (YAML *self)
     CODE:
-        if (!self->emitter) {
-          XSRETURN_UNDEF;
-        }
-        switch (self->emitter->line_break) {
+        switch (self->linebreak) {
         case YAML_ANY_BREAK:   RETVAL = "any"; break;
         case YAML_CR_BREAK:    RETVAL = "cr"; break;
         case YAML_LN_BREAK:    RETVAL = "ln"; break;
@@ -291,40 +288,32 @@ YAML*
 linebreak (YAML *self, char *value)
     CODE:
         (void)RETVAL;
-        if (!self->emitter) {
-          /*fprintf(stderr, "new emitter\n");*/
-          Newx(self->emitter,1,yaml_emitter_t);
-          yaml_emitter_initialize(self->emitter);
-          set_emitter_options(self, self->emitter);
-        }
         if (strEQc(value, "any")) {
-          yaml_emitter_set_break(self->emitter, YAML_ANY_BREAK);
+          self->linebreak = YAML_ANY_BREAK;
         }
         else if (strEQc(value, "cr")) {
-          yaml_emitter_set_break(self->emitter, YAML_CR_BREAK);
+          self->linebreak = YAML_CR_BREAK;
         }
         else if (strEQc(value, "ln")) {
-          yaml_emitter_set_break(self->emitter, YAML_LN_BREAK);
+          self->linebreak = YAML_LN_BREAK;
         }
         else if (strEQc(value, "crln")) {
-          yaml_emitter_set_break(self->emitter, YAML_CRLN_BREAK);
+          self->linebreak = YAML_CRLN_BREAK;
         }
         else {
           croak("Invalid YAML::Safe->linebreak value %s", value);
         }
     OUTPUT: self
 
+# both are for the emitter only
 UV
 get_indent (YAML *self)
     ALIAS:
         get_indent          = 1
         get_wrapwidth       = 2
     CODE:
-        # both are for the dumper only
-        RETVAL = ix == 1 ? (self->emitter ?
-                            self->emitter->best_indent : 2)
-               : ix == 2 ? (self->emitter ?
-                            self->emitter->best_width : 80)
+        RETVAL = ix == 1 ? self->indent
+               : ix == 2 ? self->wrapwidth
                : 0;
     OUTPUT: RETVAL
 
@@ -335,22 +324,17 @@ indent (YAML *self, IV iv)
         wrapwidth       = 2
     CODE:
         (void)RETVAL;
-        if (!self->emitter) {
-          Newx(self->emitter,1,yaml_emitter_t);
-          yaml_emitter_initialize(self->emitter);
-          set_emitter_options(self, self->emitter);
-        }
         if (!SvIOK(ST(1)))
           croak("Invalid argument type");
         if (ix == 1) {
           if (iv < 1 || iv >= 10)
-            croak("Invalid YAML::Safe->indent value %"  IVdf, iv);
-          yaml_emitter_set_indent(self->emitter, iv);
+            croak("Invalid YAML::Safe->indent value %"  IVdf " (only 1-10)", iv);
+          self->indent = iv;
         }
         else if (ix == 2) {
           if (iv < 1 || iv >= 0xffff)
-            croak("Invalid YAML::Safe->wrapwidth value %"  IVdf, iv);
-          yaml_emitter_set_width(self->emitter, iv);
+            croak("Invalid YAML::Safe->wrapwidth value %"  IVdf " (only 1-0xffff)", iv);
+          self->wrapwidth = iv;
         }
     OUTPUT: self
 

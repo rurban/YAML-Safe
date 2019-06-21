@@ -94,28 +94,28 @@ Configuration
     via getter and setter methods.
 
     "enablecode"
-        Turns on handling of code blocks.
+        If enabled turns on handling of code blocks.
 
     "encoding"
-        Default utf8
+        Default "utf8"
 
-        Set to any, utf8, utf16le or utf16be.
+        Set to "any", "utf8", "utf16le" or "utf16be".
 
     "safemode"
         Default 0
 
-        Set to 1 or use the Safe methods to restrict the allowed classed
-        only the set of registered classes or tags starting with "perl/".
+        If enabled by using the the Safe methods restrict the blessing only
+        for the set of registered classes or tags starting with "perl/".
 
   Loader Options
     via getter and setter methods.
 
     "nonstrict"
-        Permit certain reader errors to loosely match other YAML module
-        semantics. In detail: Allow "control characters are not allowed"
-        with while parsing a quoted scalar found unknown escape character.
-        Note that any error is stored and returned, just not immediately.
-        This is needed for cpan distroprefs.
+        If enabled permits certain reader errors to loosely match other YAML
+        module semantics. In detail: Allow "control characters are not
+        allowed" with while parsing a quoted scalar found unknown escape
+        character. Note that any error is stored and returned, just not
+        immediately. This is needed for cpan distroprefs.
 
         However the reader error "invalid trailing UTF-8 octet" and all
         other utf8 strictness violations are still fatal.
@@ -135,8 +135,8 @@ Configuration
         "YAML::Safe::coderef2text()".
 
     "quotenum"
-        When true (the default) strings that look like numbers but have not
-        been numified will be quoted when dumping.
+        If enabled strings that look like numbers but have not been numified
+        will be quoted when dumping.
 
         This ensures leading that things like leading zeros and other
         formatting are preserved.
@@ -165,23 +165,26 @@ Configuration
         Control text wrapping.
 
     "canonical"
-        Set to undef or 0 to disable sorting map keys.
+        Default: disabled.
+
+        Enable to sort map keys.
 
     "unicode"
         Default 1
 
-        Set to undef or 0 to disallow unescaped non-ASCII characters.
+        Set to undef or 0 to disallow unescaped non-ASCII characters. e.g.
+        "YAML::Safe-"new->unicode(0)>
 
     "linebreak"
         Default ln
 
-        Set to any, cr, ln or crln.
+        Set to "any", "cr", "ln" or "crln".
 
     "openended"
         Default 0
 
-        Set to 1 or a true value to embed the yaml into "...". If an
-        explicit document end is required.
+        If enabled embed the yaml into "...", if an explicit document end is
+        required.
 
 Using YAML::Safe with Unicode
     Handling unicode properly in Perl can be a pain. YAML::Safe only deals

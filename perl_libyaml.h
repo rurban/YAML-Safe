@@ -53,9 +53,10 @@ typedef enum {
 } yaml_boolean_t;
 
 typedef struct {
-    yaml_parser_t *parser;
-    yaml_event_t *event;
-    yaml_emitter_t *emitter;
+    yaml_parser_t  parser; /* inlined */
+    yaml_event_t   event;
+    yaml_emitter_t emitter;
+    U32 flags;
     char *filename;
     PerlIO *perlio;
     HV *anchors;
@@ -63,8 +64,10 @@ typedef struct {
     HV *safeclasses;
     long anchor;
     int document;
-    U32 flags;
+    int indent;
+    int wrapwidth;
     yaml_encoding_t encoding;
+    yaml_break_t linebreak;
     yaml_boolean_t boolean;
 } YAML;
 
@@ -97,6 +100,8 @@ yaml_init (YAML *self)
 {
   Zero (self, 1, YAML);
   self->flags = F_UNICODE;
+  self->indent = 2;
+  self->wrapwidth = 80;
   return self;
 }
 

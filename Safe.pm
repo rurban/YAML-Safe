@@ -265,19 +265,19 @@ via getter and setter methods.
 
 =item C<enablecode>
 
-Turns on handling of code blocks.
+If enabled turns on handling of code blocks.
 
 =item C<encoding>
 
-Default utf8
+Default "utf8"
 
-Set to any, utf8, utf16le or utf16be.
+Set to "any", "utf8", "utf16le" or "utf16be".
 
 =item C<safemode>
 
 Default 0
 
-Set to 1 or use the Safe methods to restrict the allowed classed only
+If enabled by using the the Safe methods restrict the blessing only for
 the set of registered classes or tags starting with "perl/".
 
 =back
@@ -290,9 +290,9 @@ via getter and setter methods.
 
 =item C<nonstrict>
 
-Permit certain reader errors to loosely match other YAML module
-semantics. In detail: Allow B<"control characters are not allowed">
-with while parsing a quoted scalar found unknown escape
+If enabled permits certain reader errors to loosely match other YAML
+module semantics. In detail: Allow B<"control characters are not
+allowed"> with while parsing a quoted scalar found unknown escape
 character. Note that any error is stored and returned, just not
 immediately. This is needed for cpan distroprefs.
 
@@ -322,7 +322,7 @@ C<YAML::Safe::coderef2text()>.
 
 =item C<quotenum>
 
-When true (the default) strings that look like numbers but have not
+If enabled strings that look like numbers but have not
 been numified will be quoted when dumping.
 
 This ensures leading that things like leading zeros and other
@@ -356,25 +356,28 @@ Control text wrapping.
 
 =item C<canonical>
 
-Set to undef or 0 to disable sorting map keys.
+Default: disabled.
+
+Enable to sort map keys.
 
 =item C<unicode>
 
 Default 1
 
 Set to undef or 0 to disallow unescaped non-ASCII characters.
+e.g. C<YAML::Safe->new->unicode(0)>
 
 =item C<linebreak>
 
 Default ln
 
-Set to any, cr, ln or crln.
+Set to "any", "cr", "ln" or "crln".
 
 =item C<openended>
 
 Default 0
 
-Set to 1 or a true value to embed the yaml into "...". If an explicit
+If enabled embed the yaml into "...", if an explicit
 document end is required.
 
 =back
