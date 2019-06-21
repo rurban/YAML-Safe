@@ -51,7 +51,8 @@ Load (...)
         else if ((items == 1 && ix < 8) || /* no self needed */
                  (ix >= 3 && ix <= 4)) {   /* and Dump, DumpFile can have more args */
           /* default options */
-          self = (YAML*)calloc(1, sizeof(YAML));
+          self = (YAML*)malloc(sizeof(YAML));
+          yaml_init (self);
           yaml_arg = ST(0);
           old_safe = 0;
         } else {
