@@ -51,7 +51,7 @@ yaml_perlio_write_handler(void *data, unsigned char *buffer, size_t size);
 static const char* options[] =
   {
    /* Both */
-   "boolean",         /* "JSON::PP", "boolean", "Types::Serialiser" or 0 */
+   "boolean",         /* "JSON::PP", "boolean" or 0 */
    "disableblessed",  /* bool, default: 0 */
    "enablecode",      /* bool, default: 0 */
    /* Loader */
@@ -673,16 +673,13 @@ load_scalar(YAML *self)
         }
         else if (strEQc(string, "true")) {
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
-                char *name = "JSON::PP::Boolean";
-                scalar = sv_setref_iv(newSV(0), name, 1);
+                scalar = sv_setref_iv(newSV(1), "JSON::PP::Boolean", 1);
             }
             else if (self->boolean == YAML_BOOLEAN_BOOLEAN) {
-                char *name = "boolean";
-                scalar = sv_setref_iv(newSV(0), name, 1);
+                scalar = sv_setref_iv(newSV(1), "boolean", 1);
             }
             else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
-                char *name = "Types::Serialiser";
-                scalar = sv_setref_iv(newSV(0), name, 1);
+                scalar = sv_setref_iv(newSV(1), "Types::Serialiser", 1);
             }
             else {
                 scalar = &PL_sv_yes;
@@ -694,19 +691,13 @@ load_scalar(YAML *self)
         }
         else if (strEQc(string, "false")) {
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
-                char *name = "JSON::PP::Boolean";
-                scalar = newSV(0);
-                scalar = sv_setref_iv(scalar, name, 0);
+                scalar = sv_setref_iv(newSV(0), "JSON::PP::Boolean", 0);
             }
             else if (self->boolean == YAML_BOOLEAN_BOOLEAN) {
-                char *name = "boolean";
-                scalar = newSV(0);
-                scalar = sv_setref_iv(scalar, name, 0);
+                scalar = sv_setref_iv(newSV(0), "boolean", 0);
             }
             else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
-                char *name = "Types::Serialiser";
-                scalar = newSV(0);
-                scalar = sv_setref_iv(scalar, name, 0);
+                scalar = sv_setref_iv(newSV(0), "Types::Serialiser", 0);
             }
             else {
                 scalar = &PL_sv_no;

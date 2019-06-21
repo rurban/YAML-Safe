@@ -11,12 +11,7 @@ stringtrue: 'true'
 ...
 
 
-my $obj = YAML::Safe->new->boolean("JSON::PP");
-if (!$obj) {
-    plan skip_all => "JSON::PP not installed";
-    exit;
-}
-my $hash = $obj->Load($yaml);
+my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {
     plan skip_all => "JSON::PP not installed";
     exit;
@@ -24,6 +19,7 @@ if ($@ and $@ =~ m{JSON/PP}) {
 
 plan tests => 7;
 
+my $hash = $obj->Load($yaml);
 isa_ok($hash->{booltrue}, 'JSON::PP::Boolean');
 isa_ok($hash->{boolfalse}, 'JSON::PP::Boolean');
 

@@ -219,12 +219,17 @@ boolean (YAML *self, SV *value)
         if (SvPOK(value)) {
           if (strEQc(SvPVX(value), "JSON::PP")) {
             self->boolean = YAML_BOOLEAN_JSONPP;
+            /* On older perls (<5.20) this corrupts ax */
+            load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(value), NULL);
+            /* This overwrites ST(1) with the module path */
+            SvREADONLY_off(ST(1));
+            sv_setpvn(ST(1), "JSON::PP", sizeof("JSON::PP")-1);
           }
           else if (strEQc(SvPVX(value), "boolean")) {
             self->boolean = YAML_BOOLEAN_BOOLEAN;
-          }
-          else if (strEQc(SvPVX(value), "Types::Serialiser")) {
-            self->boolean = YAML_BOOLEAN_TYPES_SERIALISER;
+            load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(value), NULL);
+            SvREADONLY_off(ST(1));
+            sv_setpvn(ST(1), "boolean", sizeof("boolean")-1);
           }
           else if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
             self->boolean = YAML_BOOLEAN_NONE;

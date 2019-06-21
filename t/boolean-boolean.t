@@ -10,9 +10,7 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
-my $obj = YAML::Safe->new->boolean("boolean");
-my $hash = eval { $obj->Load($yaml) };
-
+my $obj = eval { YAML::Safe->new->boolean("boolean") };
 if ($@ and $@ =~ m{boolean}) {
     plan skip_all => "boolean not installed";
     exit;
@@ -20,6 +18,7 @@ if ($@ and $@ =~ m{boolean}) {
 
 plan tests => 7;
 
+my $hash = $obj->Load($yaml);
 isa_ok($hash->{booltrue}, 'boolean');
 isa_ok($hash->{boolfalse}, 'boolean');
 

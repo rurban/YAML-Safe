@@ -274,6 +274,31 @@ Default "utf8"
 
 Set to "any", "utf8", "utf16le" or "utf16be".
 
+=item C<boolean>
+
+Set to "JSON::PP" or "boolean" to enable or 0 to disable.  Encodes
+true and false to the respective classes. It will try to load
+L<JSON::PP> or L<boolean> and die if it can't be loaded.
+
+With that it's possible to add new "real" booleans to a data structure:
+
+      my $o = YAML::Safe->new->boolean("JSON::PP"); # or "boolean"
+      my $data = $o->Load("booltrue: true");
+      $data->{boolfalse} = JSON::PP::false;
+      my $yaml = Dump($data);
+      # boolfalse: false
+      # booltrue: true
+
+Please note that JSON::PP::Boolean and boolean.pm behave a bit differently.
+Ideally you should only use them in boolean context.
+
+If not set, booleans are loaded as special perl variables C<PL_sv_yes> and
+C<PL_sv_no>, which have the disadvantage that they are readonly, and you can't
+add those to an existing data structure with pure perl.
+
+If you simply need to load "perl booleans" that are true or false in boolean
+context, you will be fine with the default setting.
+
 =item C<safemode>
 
 Default 0
