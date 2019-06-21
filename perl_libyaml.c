@@ -41,7 +41,7 @@ get_yaml_anchor(YAML *, SV *);
 static yaml_char_t *
 get_yaml_tag(SV *);
 static int
-append_output(void *sv, unsigned char *buffer, size_t size);
+yaml_sv_write_handler(void *sv, unsigned char *buffer, size_t size);
 static int
 yaml_perlio_read_handler(void *data, unsigned char *buffer, size_t size, size_t *size_read);
 static int
@@ -894,7 +894,7 @@ Dump(YAML *self, int yaml_ix)
     set_emitter_options(self, &self->emitter);
     yaml_emitter_set_output(
         &self->emitter,
-        &append_output,
+        &yaml_sv_write_handler,
         (void *)yaml
     );
 
@@ -1496,7 +1496,7 @@ dump_ref(YAML *self, SV *node)
 }
 
 static int
-append_output(void *sv, unsigned char *buffer, size_t size)
+yaml_sv_write_handler(void *sv, unsigned char *buffer, size_t size)
 {
     sv_catpvn((SV *)sv, (const char *)buffer, (STRLEN)size);
     return 1;
