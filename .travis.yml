@@ -1,10 +1,8 @@
-# Hand made .travis.yml from pkg/travis.yml
-
-dist: trusty
-
 language: perl
-
+sudo: false
 perl:
+- '5.30'
+- '5.28'
 - '5.26'
 - '5.24'
 - '5.22'
@@ -12,11 +10,9 @@ perl:
 - '5.18'
 - '5.16'
 - '5.14'
-
-# XXX Failing these versions. DZ wants 5.14.
-# - '5.12'
-# - '5.10'
-# - '5.8'
+- '5.12'
+- '5.10'
+- '5.8'
 
 # before_install:
 # - git clone git://github.com/travis-perl/helpers
@@ -24,26 +20,12 @@ perl:
 # - source ~/travis-perl-helpers/init --auto
 
 install:
-- perlbrew install-cpanm -f
-- git clone https://github.com/ingydotnet/test-base-pm
-    ../test-base-pm
-# Travis Dist::Zilla was out of date on Jan 2, 2017
-# Remove 'Dist::Zilla' after fixed.
-- cpanm --quiet --notest
-    Test::Base
-    Zilla::Dist
-    Dist::Zilla
-
-script:
-- zild disttest
-
-notifications:
-  irc:
-    channels:
-    - irc.perl.org#yaml
-    on_success: change
-    on_failure: always
-    skip_join: true
+  - perlbrew install-cpanm -f
+  - git clone https://github.com/ingydotnet/test-base-pm
+      ../test-base-pm
+  - cpanm --quiet --notest
+      Test::Base
+      JSON::PP
 
 # Hack to not run on tag pushes:
 branches:
