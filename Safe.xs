@@ -39,9 +39,7 @@ Load (...)
   PPCODE:
         /* check if called as method or function */
         if (items >= 2 &&
-            SvOK(ST(1)) &&
             SvROK(ST(0)) &&
-            SvOBJECT(SvRV(ST(0))) &&
             sv_derived_from (ST(0), "YAML::Safe")) {
           self = (YAML*)SvPVX(SvRV(ST(0)));
           assert(self);
