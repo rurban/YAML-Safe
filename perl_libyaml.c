@@ -321,7 +321,7 @@ LoadFile(YAML *self, SV *sv_file)
             fname = SvPV_const(sv_file, len);
             goto pv_load;
         } else {
-            croak("Invalid argument type for file: ref of %s", sv_peek(aTHX_ rv));
+            croak("Invalid argument type for file: ref of %s", Perl_sv_peek(aTHX_ rv));
             return 0;
         }
     }
@@ -347,7 +347,7 @@ LoadFile(YAML *self, SV *sv_file)
                               &yaml_perlio_read_handler,
                               self);
     } else {
-        croak("Invalid argument type for file: %s", sv_peek(aTHX_ sv_file));
+        croak("Invalid argument type for file: %s", Perl_sv_peek(aTHX_ sv_file));
         return 0;
     }
 
@@ -961,7 +961,7 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
             fname = SvPV_const(sv_file, len);
             goto pv_dump;
         } else {
-            croak("Invalid argument type for file: ref of %s", sv_peek(aTHX_ rv));
+            croak("Invalid argument type for file: ref of %s", Perl_sv_peek(aTHX_ rv));
             return 0;
         }
     }
@@ -987,7 +987,7 @@ DumpFile(YAML *self, SV *sv_file, int yaml_ix)
                                 self);
     } else {
         /* sv_peek since 5.005 */
-        croak("Invalid argument type for file: %s", sv_peek(aTHX_ sv_file));
+        croak("Invalid argument type for file: %s", Perl_sv_peek(aTHX_ sv_file));
         return 0;
     }
 
