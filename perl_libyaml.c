@@ -1378,10 +1378,12 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
         string = SvPV_nomg(node_clone, string_len);
         if (
             (string_len == 0) ||
-            strEQc(string, "~") ||
-            strEQc(string, "true") ||
-            strEQc(string, "false") ||
-            strEQc(string, "null") ||
+            (string_len == 1 && strEQc(string, "~")) ||
+            (string_len == 4 &&
+             (strEQc(string, "true") ||
+              strEQc(string, "null"))) ||
+            (string_len == 5 &&
+             strEQc(string, "false")) ||
             (SvTYPE(node_clone) >= SVt_PVGV) ||
             ( (self->flags & F_QUOTENUM) &&
               !SvNIOK(node_clone) &&
