@@ -74,8 +74,12 @@ YAML_DECLARE(int)
 yaml_string_extend(yaml_char_t **start,
         yaml_char_t **pointer, yaml_char_t **end)
 {
-    yaml_char_t *new_start = (yaml_char_t *)yaml_realloc((void*)*start, (*end - *start)*2);
+    yaml_char_t *new_start;
 
+    if ((char *)*end - (char *)*start >= INT_MAX / 2)
+       return 0;
+
+    new_start = (yaml_char_t *)yaml_realloc((void*)*start, (*end - *start)*2);
     if (!new_start) return 0;
 
     memset(new_start + (*end - *start), 0, *end - *start);
@@ -124,7 +128,6 @@ yaml_stack_extend(void **start, void **top, void **end)
 	return 0;
 
     new_start = yaml_realloc(*start, ((char *)*end - (char *)*start)*2);
-
     if (!new_start) return 0;
 
     *top = (char *)new_start + ((char *)*top - (char *)*start);
@@ -625,7 +628,7 @@ yaml_token_delete(yaml_token_t *token)
 static int
 yaml_check_utf8(const yaml_char_t *start, size_t length)
 {
-    const yaml_char_t *end = start+length;
+    const yaml_char_t *end = start + length;
     const yaml_char_t *pointer = start;
 
     while (pointer < end) {
