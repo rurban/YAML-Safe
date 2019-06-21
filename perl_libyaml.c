@@ -47,6 +47,11 @@ yaml_perlio_read_handler(void *data, unsigned char *buffer, size_t size, size_t 
 static int
 yaml_perlio_write_handler(void *data, unsigned char *buffer, size_t size);
 
+/* can honor lexical warnings and $^W */
+#if PERL_VERSION > 11
+#define Perl_warner Perl_ck_warner
+#endif
+
 #if 0
 static const char* options[] =
   {
