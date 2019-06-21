@@ -12,7 +12,7 @@ stringtrue: 'true'
 
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
-if ($@ and $@ =~ m{JSON/PP}) {
+if (($@ and $@ =~ m{JSON/PP}) or !$obj) {
     plan skip_all => "JSON::PP not installed";
     exit;
 }
