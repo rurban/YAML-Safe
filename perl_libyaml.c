@@ -526,8 +526,8 @@ load_mapping(YAML *self, char *tag)
                 klass = tag + strlen(prefix);
                 if (self->flags & F_SAFEMODE && self->safeclasses) {
                     if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                        Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
-                                         "Unsafe class %s skipped loading", klass);
+                        Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                    "Unsafe class %s skipped loading", klass);
                         return hash_ref;
                     }
                 }
@@ -573,8 +573,8 @@ load_sequence(YAML *self)
                 klass = tag + strlen(prefix);
                 if (self->flags & F_SAFEMODE && self->safeclasses) {
                     if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                        Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
-                                         "Unsafe class %s skipped loading", klass);
+                        Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                    "Unsafe class %s skipped loading", klass);
                         return array_ref;
                     }
                 }
@@ -647,8 +647,8 @@ load_scalar(YAML *self)
                     self->safeclasses &&
                     hv_exists(self->safeclasses, klass, strlen(klass)))
                 {
-                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
-                                     "Unsafe class %s skipped loading", klass);
+                    Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                "Unsafe class %s skipped loading", klass);
                     scalar = newSVpvn(string, length);
                 } else {
                     scalar = sv_setref_pvn(newSV(0), klass, string, strlen(string));
@@ -758,8 +758,8 @@ load_regexp(YAML * self)
             char *klass = tag + strlen(prefix);
             if (self->flags & F_SAFEMODE && self->safeclasses) {
                 if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
-                                     "Unsafe class %s skipped loading", klass);
+                    Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                "Unsafe class %s skipped loading", klass);
                     goto cont_rx;
                 }
             }
@@ -813,8 +813,8 @@ load_code(YAML * self)
             char *klass = tag + strlen(prefix);
             if (self->flags & F_SAFEMODE && self->safeclasses) {
                 if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                    Perl_ck_warner_d(aTHX_ packWARN(WARN_MISC),
-                                     "Unsafe code in class %s skipped", klass);
+                    Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                "Unsafe code in class %s skipped", klass);
                     return &PL_sv_undef;
                 }
             }

@@ -16,6 +16,10 @@
 #include <yaml.h>
 #include <ppport_sort.h>
 
+#ifndef PERL_STATIC_INLINE
+#define PERL_STATIC_INLINE static
+#endif
+
 #if PERL_VERSION < 5
 #define sv_peek(pTHX_ sv_file) ""
 #endif
