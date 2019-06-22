@@ -67,6 +67,7 @@ t/quote.t
 .travis.yml
 t/ref-scalar.t
 t/regexp.t
+t/safeclass.t
 t/string_nulls.t
 t/tags.t
 t/TestYAML.pm

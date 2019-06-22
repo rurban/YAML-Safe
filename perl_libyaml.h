@@ -46,6 +46,7 @@
 #define TAG_PERL_STR TAG_PERL_PREFIX "str"
 #define TAG_PERL_GLOB TAG_PERL_PREFIX "glob"
 #define ERRMSG "yaml error: "
+#define WARNMSG "YAML::Safe warning: "
 
 #define F_UNICODE          0x00000001
 #define F_DISABLEBLESSED   0x00000002

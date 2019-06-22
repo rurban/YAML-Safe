@@ -97,9 +97,15 @@ sub Load() {
     no strict 'refs';
     &{$yaml_module . "::Load"}(@_);
 }
+sub SafeLoad() {
+    &YAML::Safe::SafeLoad(@_);
+}
 sub Dump() {
     no strict 'refs';
     &{$yaml_module . "::Dump"}(@_);
+}
+sub SafeDump() {
+    &YAML::Safe::SafeDump(@_);
 }
 sub LoadFile() {
     no strict 'refs';
@@ -119,15 +125,18 @@ use Test::Base::Filter -Base;
 sub load_yaml {
     TestYAMLTests::Load(@_);
 }
-
+sub safeload_yaml {
+    &YAML::Safe::SafeLoad(@_);
+}
 sub dump_yaml {
     TestYAMLTests::Dump(@_);
 }
-
+sub safedump_yaml {
+    &YAML::Safe::SafeDump(@_);
+}
 sub loadfile_yaml {
     TestYAMLTests::LoadFile(@_);
 }
-
 sub dumpfile_yaml {
     TestYAMLTests::DumpFile(@_);
 }

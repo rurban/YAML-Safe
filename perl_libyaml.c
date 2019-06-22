@@ -520,12 +520,14 @@ load_mapping(YAML *self, char *tag)
                                 form("bad tag found for hash: '%s'", tag)));
             if (!(self->flags & F_DISABLEBLESSED)) {
                 klass = tag + strlen(prefix);
-                if (self->flags & F_SAFEMODE && self->safeclasses) {
-                    if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                        Perl_warner(aTHX_ packWARN(WARN_MISC),
-                                    "Unsafe class %s skipped loading", klass);
-                        return hash_ref;
-                    }
+                if (self->flags & F_SAFEMODE &&
+                    (!self->safeclasses ||
+                     !hv_exists(self->safeclasses, klass, strlen(klass))))
+                {
+                    Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                WARNMSG "skipped loading unsafe HASH for class %s",
+                                klass);
+                    return hash_ref;
                 }
                 sv_bless(hash_ref, gv_stashpv(klass, TRUE));
             }
@@ -567,12 +569,14 @@ load_sequence(YAML *self)
                               form("bad tag found for array: '%s'", tag)));
             if (!(self->flags & F_DISABLEBLESSED)) {
                 klass = tag + strlen(prefix);
-                if (self->flags & F_SAFEMODE && self->safeclasses) {
-                    if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                        Perl_warner(aTHX_ packWARN(WARN_MISC),
-                                    "Unsafe class %s skipped loading", klass);
-                        return array_ref;
-                    }
+                if (self->flags & F_SAFEMODE &&
+                    (!self->safeclasses ||
+                     !hv_exists(self->safeclasses, klass, strlen(klass))))
+                {
+                    Perl_warner(aTHX_ packWARN(WARN_MISC),
+                                WARNMSG "skipped loading unsafe ARRAY for class %s",
+                                klass);
+                    return array_ref;
                 }
                 sv_bless(array_ref, gv_stashpv(klass, TRUE));
             }
@@ -635,16 +639,17 @@ load_scalar(YAML *self)
             if (*tag == '!')
                 prefix = "!";
             else if (strlen(tag) <= strlen(prefix) ||
-                ! strnEQ(tag, prefix, strlen(prefix))
-            ) croak("%sbad tag found for scalar: '%s'", ERRMSG, tag);
+                     !strnEQ(tag, prefix, strlen(prefix)))
+                croak("%sbad tag found for scalar: '%s'", ERRMSG, tag);
             klass = tag + strlen(prefix);
             if (!(self->flags & F_DISABLEBLESSED))
                 if (self->flags & F_SAFEMODE &&
-                    self->safeclasses &&
-                    hv_exists(self->safeclasses, klass, strlen(klass)))
+                    (!self->safeclasses ||
+                     !hv_exists(self->safeclasses, klass, strlen(klass))))
                 {
                     Perl_warner(aTHX_ packWARN(WARN_MISC),
-                                "Unsafe class %s skipped loading", klass);
+                                WARNMSG "skipped loading unsafe SCALAR for class %s",
+                                klass);
                     scalar = newSVpvn(string, length);
                 } else {
                     scalar = sv_setref_pvn(newSV(0), klass, string, strlen(string));
@@ -752,10 +757,13 @@ load_regexp(YAML * self)
     if (strlen(tag) > strlen(prefix) && strnEQ(tag, prefix, strlen(prefix))) {
         if (!(self->flags & F_DISABLEBLESSED)) {
             char *klass = tag + strlen(prefix);
-            if (self->flags & F_SAFEMODE && self->safeclasses) {
-                if (hv_exists(self->safeclasses, klass, strlen(klass))) {
+            if (self->flags & F_SAFEMODE) {
+                if (!self->safeclasses ||
+                    !hv_exists(self->safeclasses, klass, strlen(klass)))
+                {
                     Perl_warner(aTHX_ packWARN(WARN_MISC),
-                                "Unsafe class %s skipped loading", klass);
+                                WARNMSG "skipped loading unsafe REGEXP for class %s",
+                                klass);
                     goto cont_rx;
                 }
             }
@@ -807,12 +815,14 @@ load_code(YAML * self)
     if (strlen(tag) > strlen(prefix) && strnEQ(tag, prefix, strlen(prefix))) {
         if (!(self->flags & F_DISABLEBLESSED)) {
             char *klass = tag + strlen(prefix);
-            if (self->flags & F_SAFEMODE && self->safeclasses) {
-                if (hv_exists(self->safeclasses, klass, strlen(klass))) {
-                    Perl_warner(aTHX_ packWARN(WARN_MISC),
-                                "Unsafe code in class %s skipped", klass);
-                    return &PL_sv_undef;
-                }
+            if (self->flags & F_SAFEMODE &&
+                (!self->safeclasses ||
+                 !hv_exists(self->safeclasses, klass, strlen(klass))))
+            {
+                Perl_warner(aTHX_ packWARN(WARN_MISC),
+                            WARNMSG "skipped loading unsafe CODE for class %s",
+                            klass);
+                return &PL_sv_undef;
             }
             sv_bless(code, gv_stashpv(klass, TRUE));
         }
@@ -1259,6 +1269,18 @@ dump_hash(
 
     if (!tag)
         tag = get_yaml_tag(node);
+    if (tag && self->flags & F_SAFEMODE) {
+        char *prefix = TAG_PERL_PREFIX "hash:";
+        char *klass = (char*)tag + strlen(prefix);
+        if (!self->safeclasses ||
+            !hv_exists(self->safeclasses, klass, strlen(klass)))
+        {
+            Perl_warner(aTHX_ packWARN(WARN_MISC),
+                        WARNMSG "skipped dumping unsafe HASH in class %s",
+                        klass);
+            hash = (HV*)sv_2mortal((SV*)newHV());
+        }
+    }
 
     yaml_mapping_start_event_initialize(
         &event_mapping_start, anchor, tag, 0, YAML_BLOCK_MAPPING_STYLE);
@@ -1303,6 +1325,18 @@ dump_array(YAML *self, SV *node)
     if (anchor && strEQ((char *)anchor, ""))
         return;
     tag = get_yaml_tag(node);
+    if (tag && self->flags & F_SAFEMODE) {
+        char *prefix = TAG_PERL_PREFIX "array:";
+        char *klass = (char*)tag + strlen(prefix);
+        if (!self->safeclasses ||
+            !hv_exists(self->safeclasses, klass, strlen(klass)))
+        {
+            Perl_warner(aTHX_ packWARN(WARN_MISC),
+                        WARNMSG "skipped dumping unsafe ARRAY in class %s",
+                        klass);
+            array_size = 0;
+        }
+    }
 
     yaml_sequence_start_event_initialize(
         &event_sequence_start, anchor, tag, 0, YAML_BLOCK_SEQUENCE_STYLE);
@@ -1329,7 +1363,18 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
     yaml_scalar_style_t style = YAML_PLAIN_SCALAR_STYLE;
 
     if (tag) {
+        char *prefix = TAG_PERL_PREFIX "scalar:";
+        char *klass = (char*)tag + strlen(prefix);
         plain_implicit = quoted_implicit = 0;
+        if (self->flags & F_SAFEMODE &&
+            (!self->safeclasses ||
+             !hv_exists(self->safeclasses, klass, strlen(klass))))
+        {
+            Perl_warner(aTHX_ packWARN(WARN_MISC),
+                        WARNMSG "skipped dumping unsafe SCALAR for class %s",
+                        klass);
+            node = &PL_sv_undef;
+        }
     }
     else {
         tag = (yaml_char_t *)TAG_PERL_STR;
@@ -1404,21 +1449,44 @@ dump_code(YAML *self, SV *node)
     yaml_char_t *tag;
     yaml_scalar_style_t style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
     char *string = "{ \"DUMMY\" }";
+
+    tag = get_yaml_tag(node);
+
     if (self->flags & F_DUMPCODE) {
         /* load_module(PERL_LOADMOD_NOIMPORT, newSVpv("B::Deparse", 0), NULL);
          */
-        SV *result;
+        SV *result = NULL;
         SV *code = find_coderef("YAML::Safe::coderef2text");
-        AV *args = newAV();
-        av_push(args, SvREFCNT_inc(node));
-        args = (AV *)sv_2mortal((SV *)args);
-        result = call_coderef(code, args);
+        if (self->flags & F_SAFEMODE) {
+            char *klass; STRLEN len;
+            SV* rnode = SvRV(node);
+            HV* stash = SvOBJECT(rnode)
+                ? SvSTASH(rnode)
+                : GvSTASH(CvGV(rnode));
+            if (!stash)
+                stash = CvSTASH(rnode);
+            klass = HvNAME(stash);
+            len = HvNAMELEN(stash);
+            if (HvNAMEUTF8(stash))
+                len = -len;
+            if (!self->safeclasses || !hv_exists(self->safeclasses, klass, len)) {
+                Perl_warner(aTHX_ packWARN(WARN_MISC),
+                            WARNMSG "skipped dumping unsafe CODE for class %s",
+                            klass);
+                string = "{ \"UNSAFE\" }";
+                result = &PL_sv_undef;
+            }
+        }
+        if (result != &PL_sv_undef) {
+            AV *args = newAV();
+            av_push(args, SvREFCNT_inc(node));
+            result = call_coderef(code, (AV*)sv_2mortal((SV *)args));
+        }
         if (result && result != &PL_sv_undef) {
             string = SvPV_nolen(result);
             style = YAML_LITERAL_SCALAR_STYLE;
         }
     }
-    tag = get_yaml_tag(node);
 
     yaml_scalar_event_initialize(
         &event_scalar,
@@ -1439,6 +1507,7 @@ dump_glob(YAML *self, SV *node)
     SV *result;
     SV *code = find_coderef("YAML::Safe::glob2hash");
     AV *args = newAV();
+    /* TODO: safemode */
     av_push(args, SvREFCNT_inc(node));
     args = (AV *)sv_2mortal((SV *)args);
     result = call_coderef(code, args);
