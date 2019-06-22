@@ -1,9 +1,12 @@
-.travis.yml
 api.c
 Changes
 config.h
 dumper.c
 emitter.c
+inc/Spiffy/mixin.pm
+inc/Spiffy.pm
+inc/Test/Base/Filter.pm
+inc/Test/Base.pm
 loader.c
 Makefile.PL
 MANIFEST
@@ -58,6 +61,7 @@ t/path-class.t
 t/pl_sv_undef.t
 t/private.t
 t/quote.t
+.travis.yml
 t/ref-scalar.t
 t/regexp.t
 t/string_nulls.t
