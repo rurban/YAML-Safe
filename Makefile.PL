@@ -32,6 +32,8 @@ WriteMakefile(
     'Test::Base' => 0.80,
     'File::Path' => 0.1,
     'lib' => 0.1,
+    'JSON::PP' => 2.27300,
+    'boolean' => 0.30,
   },
   INC => '-I.',
   LIBS => [''], # e.g., '-lm'
