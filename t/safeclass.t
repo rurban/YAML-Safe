@@ -52,7 +52,7 @@ is $yaml, $test->yaml_dump, "SafeDump " . $test->name . " works";
 ######
 $name = "Blessed Code Ref";
 $test = get_block_by_name($name);
-$array = Load($test->yaml);
+$array = $o->loadcode->Load($test->yaml);
 $array2 = $o->loadcode->SafeLoad($test->yaml);
 
 is $array->[0]->(), 'Ho', 'can call safe code';
