@@ -27,8 +27,11 @@ t/ascii.t
 t/binary.t
 t/blessed.t
 t/boolean-boolean.t
+t/boolean-cpaneljsonxs.t
 t/boolean-invalid.t
+t/boolean-jsonmaybexs.t
 t/boolean-jsonpp.t
+t/boolean-jsonxs.t
 t/boolean.t
 t/bug-pvf.t
 t/bug-stack.t

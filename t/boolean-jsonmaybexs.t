@@ -10,10 +10,14 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
+unless (eval { require JSON::MaybeXS }) {
+    plan skip_all => "JSON::MaybeXS not installed";
+    exit;
+}
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {
-    plan skip_all => "JSON::PP not installed";
+    plan skip_all => "JSON::PP also not installed";
     exit;
 }
 
