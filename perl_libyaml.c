@@ -1459,8 +1459,8 @@ dump_code(YAML *self, SV *node)
                 : GvSTASH(CvGV(rnode));
             if (!stash)
                 stash = CvSTASH(rnode);
-            klass = HvNAME(stash);
-            len = HvNAMELEN(stash);
+            klass = HvNAME_get(stash);
+            len = HvNAMELEN_get(stash);
             if (HvNAMEUTF8(stash))
                 len = -len;
             if (!self->safeclasses || !hv_exists(self->safeclasses, klass, len)) {

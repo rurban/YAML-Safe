@@ -34,6 +34,9 @@
 # endif
 #endif
 
+#ifndef HvNAMEUTF8
+# define HvNAMEUTF8(hv) 0
+#endif
 /* from cperl */
 #ifndef strEQc
 /* the buffer ends with \0, includes comparison of the \0.
