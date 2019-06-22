@@ -1382,13 +1382,10 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
     yaml_scalar_style_t style = YAML_PLAIN_SCALAR_STYLE;
 
     if (tag) {
-        char *prefix = TAG_PERL_PREFIX "scalar:";
-        char *klass = (char*)tag + strlen(prefix);
-        STRLEN len = strlen(klass);
         if (self->flags & F_SAFEMODE && SvOBJECT(node)) {
             HV* stash = SvSTASH(node);
-            klass = HvNAME_get(stash);
-            len = HvNAMELEN_get(stash);
+            char *klass = HvNAME_get(stash);
+            STRLEN len = HvNAMELEN_get(stash);
             if (HvNAMEUTF8(stash))
                 len = -len;
             if (!self->safeclasses ||
@@ -1519,11 +1516,10 @@ dump_code(YAML *self, SV *node)
         NULL, /* anchor */
         tag,
         (unsigned char *)string,
-        strlen(string),
+        string ? strlen(string) : 0,
         0,
         0,
         style);
-
     yaml_emitter_emit(&self->emitter, &event_scalar);
 }
 
