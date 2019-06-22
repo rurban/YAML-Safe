@@ -12,6 +12,7 @@
 #define NEED_newRV_noinc
 #define NEED_sv_2pv_nolen
 #define NEED_sv_2pvbyte
+#define NEED_gv_fetchpvn_flags
 #include "ppport.h"
 #include <yaml.h>
 #include <ppport_sort.h>
@@ -22,6 +23,15 @@
 
 #if PERL_VERSION < 5
 #define sv_peek(pTHX_ sv_file) ""
+#endif
+
+/* 5.8.9 */
+#ifndef GV_NOADD_NOINIT
+# ifdef GV_NOINIT
+#  define GV_NOADD_NOINIT GV_NOINIT
+# else
+#  define GV_NOADD_NOINIT 0
+# endif
 #endif
 
 /* from cperl */

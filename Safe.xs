@@ -13,6 +13,24 @@ init_MY_CXT(pTHX_ my_cxt_t * cxt)
   cxt->yaml_str = NULL;
 }
 
+static void
+better_load_module(const char* stash, SV* name)
+{
+  char *copy = strdup(SvPVX(name)); /* just the name with added "::" */
+  if (!gv_fetchpvn_flags(stash, strlen(stash), GV_NOADD_NOINIT, SVt_PVHV)) {
+    /* On older perls (<5.20) this corrupts ax */
+    load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(name), NULL);
+    /* This overwrites value with the module path from %INC. Undo that */
+    SvREADONLY_off(name);
+#ifdef SVf_PROTECT
+    SvFLAGS(name) &= ~SVf_PROTECT;
+#endif
+    sv_force_normal_flags(name, 0);
+    sv_setpvn(name, copy, strlen(copy));
+  }
+  free(copy);
+}
+
 MODULE = YAML::Safe		PACKAGE = YAML::Safe
 
 PROTOTYPES: ENABLE
@@ -233,17 +251,13 @@ boolean (YAML *self, SV *value)
         if (SvPOK(value)) {
           if (strEQc(SvPVX(value), "JSON::PP")) {
             self->boolean = YAML_BOOLEAN_JSONPP;
-            /* On older perls (<5.20) this corrupts ax */
-            load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(value), NULL);
-            /* This overwrites ST(1) with the module path */
-            SvREADONLY_off(ST(1));
-            sv_setpvn(ST(1), "JSON::PP", sizeof("JSON::PP")-1);
+            /* check JSON::PP::Boolean first, as it's implemented with
+               JSON, JSON::XS and many others also. In CORE since 5.13.9 */
+            better_load_module("JSON::PP::Boolean::", value);
           }
           else if (strEQc(SvPVX(value), "boolean")) {
             self->boolean = YAML_BOOLEAN_BOOLEAN;
-            load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(value), NULL);
-            SvREADONLY_off(ST(1));
-            sv_setpvn(ST(1), "boolean", sizeof("boolean")-1);
+            better_load_module("boolean::", value);
           }
           else if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
             self->boolean = YAML_BOOLEAN_NONE;
