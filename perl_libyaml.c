@@ -785,12 +785,13 @@ load_code(YAML * self)
     char *prefix = TAG_PERL_PREFIX "code:";
     SV *code;
 
-    code = newSVpvn(string, length);
-    SvUTF8_on(code);
     if (!(self->flags & F_LOADCODE)) {
+        tag = "";
         string = "{}";
         length = 2;
     }
+    code = newSVpvn(string, length);
+    SvUTF8_on(code);
 
     ENTER;
     SAVETMPS;

@@ -55,13 +55,9 @@ $yaml = <<'...';
   }
 ...
 
-my $return;
-TODO: {
-  local $main::TODO = "loadcode(0)";
 $sub = $obj->loadcode(0)->Load($yaml);
-$return = $sub->();
+my $return = $sub->();
 is($return, undef, "Loaded dummy coderef - loadcode(0)");
-}
 
 $sub = $obj->loadcode->Load($yaml);
 $return = $sub->();
