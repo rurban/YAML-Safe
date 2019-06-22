@@ -21,11 +21,11 @@ perl:
 
 install:
   - perlbrew install-cpanm -f
-  - git clone https://github.com/ingydotnet/test-base-pm
-      ../test-base-pm
   - cpanm --quiet --notest
       Test::Base
       JSON::PP
+      boolean
+      JSON::XS
 
 # Hack to not run on tag pushes:
 branches:
