@@ -61,6 +61,7 @@ is $array->[1]->(), 'Ha', 'can call unsafe code';
 is $array2->[1], undef, 'skipped unsafe code';
 
 $yaml = $o->dumpcode->SafeDump($array);
+$yaml =~ s/use strict 'refs';/use strict;/;
 is $yaml, $test->yaml_dump, "SafeDump " . $test->name . " works";
 
 __DATA__
