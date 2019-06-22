@@ -14,6 +14,8 @@ unless (eval { require JSON::XS }) {
     plan skip_all => "JSON::XS not installed";
     exit;
 }
+plan skip_all => "JSON::XS $JSON::XS::VERSION too old"
+    if $JSON::XS::VERSION < 3.0;
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {

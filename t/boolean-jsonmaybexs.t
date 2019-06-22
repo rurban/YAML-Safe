@@ -14,6 +14,13 @@ unless (eval { require JSON::MaybeXS }) {
     plan skip_all => "JSON::MaybeXS not installed";
     exit;
 }
+my $class = JSON::MaybeXS::_choose_json_module();
+my $ver;
+{ no strict 'refs'; $ver = ${$class."::VERSION"}; }
+my %minver = ( 'Cpanel::JSON::XS' => 4.0,
+               'JSON::XS' => 3.0 );
+plan skip_all => "$class $ver too old"
+  if !exists $minver{$class} or $ver < $minver{$class};
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {
