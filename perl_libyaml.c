@@ -160,14 +160,10 @@ loader_error_msg(YAML *self, char *problem)
         problem = (char *)self->parser.problem;
     if (self->filename)
       msg = form("%s%s at file %s",
-                 ERRMSG,
-                 (problem ? problem : "A problem"),
-                 self->filename);
+                 ERRMSG, (problem ? problem : "A problem"), self->filename);
     else
       msg = form("%s%s at document %d",
-                 ERRMSG,
-                 (problem ? problem : "A problem"),
-                 self->document);
+                 ERRMSG, (problem ? problem : "A problem"), self->document);
     if (self->parser.problem_mark.line ||
         self->parser.problem_mark.column)
         msg = form("%s, line: %ld, column: %ld\n",
@@ -239,9 +235,7 @@ load_impl(YAML *self)
         goto load_error;
     if (self->event.type != YAML_STREAM_START_EVENT)
         croak("%sExpected STREAM_START_EVENT; Got: %d != %d",
-            ERRMSG,
-            self->event.type,
-            YAML_STREAM_START_EVENT);
+            ERRMSG, self->event.type, YAML_STREAM_START_EVENT);
 
     self->anchors = (HV *)sv_2mortal((SV *)newHV());
 
@@ -271,9 +265,7 @@ load_impl(YAML *self)
         /* Make sure the last event is a STREAM_END */
         if (self->event.type != YAML_STREAM_END_EVENT)
             croak("%sExpected STREAM_END_EVENT; Got: %d != %d",
-                ERRMSG,
-                self->event.type,
-                YAML_STREAM_END_EVENT);
+                ERRMSG, self->event.type, YAML_STREAM_END_EVENT);
 
     } XCPT_TRY_END
 
@@ -461,7 +453,8 @@ load_node(YAML *self)
             break;
 
         default:
-            croak("%sInvalid event '%d' at top level", ERRMSG, (int) self->event.type);
+            croak("%sInvalid event '%d' at top level",
+                  ERRMSG, (int) self->event.type);
     }
 
     yaml_event_delete(&self->event);
@@ -1231,22 +1224,24 @@ get_yaml_tag(SV *node)
 
     switch (SvTYPE(SvRV(node))) {
         case SVt_PVAV:
-          tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, "array", klass);
-          break;
+            tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, "array", klass);
+            break;
         case SVt_PVHV:
-          tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, "hash", klass);
-          break;
+            tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, "hash", klass);
+            break;
         case SVt_PVCV:
-          kind = (char*)"code";
-          if (strEQc(klass, "CODE"))
-            tag = (yaml_char_t *)form("%s%s", TAG_PERL_PREFIX, kind);
+            kind = (char*)"code";
+            if (strEQc(klass, "CODE"))
+                tag = (yaml_char_t *)form("%s%s", TAG_PERL_PREFIX, kind);
+            else
+                tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, kind, klass);
           break;
         default:
-          tag = (yaml_char_t *)form("%s%s", TAG_PERL_PREFIX, klass);
-          break;
+            tag = (yaml_char_t *)form("%s%s", TAG_PERL_PREFIX, klass);
+            break;
     }
     if (!tag)
-      tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, kind, klass);
+        tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, kind, klass);
     return tag;
 }
 
@@ -1438,8 +1433,7 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
         style);
     if (! yaml_emitter_emit(&self->emitter, &event_scalar))
         croak("%sEmit scalar '%s', error: %s\n",
-            ERRMSG,
-            string, self->emitter.problem);
+            ERRMSG, string, self->emitter.problem);
 }
 
 static void
