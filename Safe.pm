@@ -291,6 +291,8 @@ With that it's possible to add new "real" booleans to a data structure:
 
 Please note that JSON::PP::Boolean and boolean.pm behave a bit differently.
 Ideally you should only use them in boolean context.
+Setting a boolean() class is only possible on a perl since v5.8.9. It will die
+on older perls.
 
 If not set, booleans are loaded as special perl variables C<PL_sv_yes> and
 C<PL_sv_no>, which have the disadvantage that they are readonly, and you can't

@@ -119,6 +119,8 @@ Configuration
 
         Please note that JSON::PP::Boolean and boolean.pm behave a bit
         differently. Ideally you should only use them in boolean context.
+        Setting a boolean() class is only possible on a perl since v5.8.9.
+        It will die on older perls.
 
         If not set, booleans are loaded as special perl variables
         "PL_sv_yes" and "PL_sv_no", which have the disadvantage that they

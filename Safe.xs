@@ -243,8 +243,6 @@ get_boolean (YAML *self)
           RETVAL = newSVpvn("JSON::PP", sizeof("JSON::PP")-1);
         else if (self->boolean == YAML_BOOLEAN_BOOLEAN)
           RETVAL = newSVpvn("boolean", sizeof("boolean")-1);
-        else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER)
-          RETVAL = newSVpvn("Types::Serialiser", sizeof("Types::Serialiser")-1);
         else
           RETVAL = &PL_sv_undef;
     OUTPUT: RETVAL
@@ -254,6 +252,7 @@ boolean (YAML *self, SV *value)
     CODE:
         (void)RETVAL;
         if (SvPOK(value)) {
+#if (PERL_BCDVERSION >= 0x5008009)
           if (strEQc(SvPVX(value), "JSON::PP")) {
             self->boolean = YAML_BOOLEAN_JSONPP;
             /* check JSON::PP::Boolean first, as it's implemented with
@@ -264,7 +263,9 @@ boolean (YAML *self, SV *value)
             self->boolean = YAML_BOOLEAN_BOOLEAN;
             better_load_module("boolean::", value);
           }
-          else if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
+          else
+#endif
+          if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
             self->boolean = YAML_BOOLEAN_NONE;
           }
           else {

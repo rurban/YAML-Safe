@@ -68,7 +68,6 @@ typedef enum {
     YAML_BOOLEAN_NONE = 0,
     YAML_BOOLEAN_JSONPP,
     YAML_BOOLEAN_BOOLEAN,
-    YAML_BOOLEAN_TYPES_SERIALISER,
 } yaml_boolean_t;
 
 typedef struct {

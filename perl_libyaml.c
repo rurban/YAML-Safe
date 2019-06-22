@@ -666,16 +666,16 @@ load_scalar(YAML *self)
             return scalar;
         }
         else if (strEQc(string, "true")) {
+#if (PERL_BCDVERSION >= 0x5008009)
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
                 scalar = sv_setref_iv(newSV(1), "JSON::PP::Boolean", 1);
             }
             else if (self->boolean == YAML_BOOLEAN_BOOLEAN) {
                 scalar = sv_setref_iv(newSV(1), "boolean", 1);
             }
-            else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
-                scalar = sv_setref_iv(newSV(1), "Types::Serialiser", 1);
-            }
-            else {
+            else
+#endif
+            {
                 scalar = &PL_sv_yes;
             }
             if (anchor)
@@ -684,16 +684,16 @@ load_scalar(YAML *self)
             return scalar;
         }
         else if (strEQc(string, "false")) {
+#if (PERL_BCDVERSION >= 0x5008009)
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
                 scalar = sv_setref_iv(newSV(0), "JSON::PP::Boolean", 0);
             }
             else if (self->boolean == YAML_BOOLEAN_BOOLEAN) {
                 scalar = sv_setref_iv(newSV(0), "boolean", 0);
             }
-            else if (self->boolean == YAML_BOOLEAN_TYPES_SERIALISER) {
-                scalar = sv_setref_iv(newSV(0), "Types::Serialiser", 0);
-            }
-            else {
+            else
+#endif
+            {
                 scalar = &PL_sv_no;
             }
             if (anchor)

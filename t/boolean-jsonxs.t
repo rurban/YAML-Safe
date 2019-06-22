@@ -10,6 +10,10 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
+if ($] < 5.008009) {
+    plan skip_all => "perl $] too old for boolean()";
+    exit;
+}
 unless (eval { require JSON::XS }) {
     plan skip_all => "JSON::XS not installed";
     exit;

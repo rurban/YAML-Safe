@@ -16,6 +16,10 @@ if ($@ and $@ =~ m{JSON/PP}) {
     plan skip_all => "JSON::PP not installed";
     exit;
 }
+if ($] < 5.008009) {
+    plan skip_all => "perl $] too old for boolean()";
+    exit;
+}
 
 plan tests => 7;
 

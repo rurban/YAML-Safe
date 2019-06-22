@@ -15,6 +15,10 @@ if ($@ and $@ =~ m{boolean}) {
     plan skip_all => "boolean not installed";
     exit;
 }
+if ($] < 5.008009) {
+    plan skip_all => "perl $] too old for boolean()";
+    exit;
+}
 
 plan tests => 7;
 

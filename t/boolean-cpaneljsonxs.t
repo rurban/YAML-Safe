@@ -16,6 +16,10 @@ unless (eval { require Cpanel::JSON::XS }) {
 }
 plan skip_all => "Cpanel::JSON::XS $Cpanel::JSON::XS::VERSION too old"
     if $Cpanel::JSON::XS::VERSION < 4.0;
+if ($] < 5.008009) {
+    plan skip_all => "perl $] too old for boolean()";
+    exit;
+}
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {
