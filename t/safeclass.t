@@ -60,8 +60,11 @@ is $array2->[0]->(), 'Ho', 'can call registered code';
 is $array->[1]->(), 'Ha', 'can call unsafe code';
 is $array2->[1], undef, 'skipped unsafe code';
 
+#warn "# SafeDump";
 $yaml = $o->dumpcode->SafeDump($array);
+#warn "# $yaml\n";
 $yaml =~ s/use strict 'refs';/use strict;/;
+#warn "# yaml_dump";
 is $yaml, $test->yaml_dump, "SafeDump " . $test->name . " works";
 
 __DATA__

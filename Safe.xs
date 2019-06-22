@@ -124,6 +124,11 @@ Load (...)
                 else {
                   self->flags |=  F_SAFEMODE;
                   ret = Dump(self, yaml_ix);
+                  /*printf("# ret: %s %d 0x%x\n",
+                         sv_peek(*PL_stack_sp),
+                         SvREFCNT(*PL_stack_sp),
+                         SvFLAGS(*PL_stack_sp)
+                         );*/
                 }
                 break;
         case 12: if (err)

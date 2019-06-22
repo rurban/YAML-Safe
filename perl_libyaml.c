@@ -224,7 +224,7 @@ static int
 load_impl(YAML *self)
 {
     dXCPT;
-    dXSARGS;
+    dXSARGS; /* does POPMARK */
     SV *node;
 
     sp = mark;
@@ -888,7 +888,7 @@ load_glob(YAML *self)
 int
 Dump(YAML *self, int yaml_ix)
 {
-    dXSARGS;
+    dXSARGS;  /* does POPMARK */
     yaml_event_t event_stream_start;
     yaml_event_t event_stream_end;
     int i;
@@ -926,6 +926,7 @@ Dump(YAML *self, int yaml_ix)
 
     /* Put the YAML stream scalar on the XS output stack */
     if (yaml) {
+        sp = PL_stack_base + ax - 1; /* ax 0 */
         SvUTF8_off(yaml);
         XPUSHs(yaml);
         PUTBACK;
@@ -1479,8 +1480,8 @@ dump_code(YAML *self, SV *node)
     if (self->flags & F_DUMPCODE) {
         /* load_module(PERL_LOADMOD_NOIMPORT, newSVpv("B::Deparse", 0), NULL);
          */
+        SV *code;
         SV *result = NULL;
-        SV *code = find_coderef("YAML::Safe::coderef2text");
         if (self->flags & F_SAFEMODE) {
             char *klass; STRLEN len;
             SV* rnode = SvRV(node);
@@ -1504,6 +1505,7 @@ dump_code(YAML *self, SV *node)
         if (result != &PL_sv_undef) {
             AV *args = newAV();
             av_push(args, SvREFCNT_inc(node));
+            code = find_coderef("YAML::Safe::coderef2text");
             result = call_coderef(code, (AV*)sv_2mortal((SV *)args));
         }
         if (result && result != &PL_sv_undef) {
