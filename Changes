@@ -1,4 +1,27 @@
 ---
+version: 0.80
+date:    Sun 23 Jun 2019 02:25:17 PM CEST
+changes:
+- First release as YAML::Safe
+- Added Safe methods
+- Fixed ax/markstack after Dump
+- Added tests: t/boolean-cpaneljsonxs.t t/boolean-jsonmaybexs.t
+  t/boolean-jsonxs.t t/options.t t/safeclass.t t/cpan.t
+- Added Test::Base and Spiffy to inc
+- Added more boolean tests and supported packages, witch run-time
+  version check. You can preload a JSON package and use it when it's
+  JSON::PP::Boolean compatible (most are).
+- options are lowercase, methods uppercase.
+- enablecode is a combination for loadcode + dumpcode
+- Warn on unsafe violations, which remove the tag/class, but with code
+  disable unsafe code at all.
+- Rename append_output to yaml_sv_write_handler
+- Dump and Load can woprk as functions or methods. Safe methods
+  can only be methods, because they need to keep the state of safe classes.
+- Fix many compiler warnings, e.g. WRITE_BREAK
+- yaml_string_extend: guard against integer overflow
+- Use our patched libyaml-2.2.3
+---
 version: 0.79_01
 date:    Mon 17 Jun 2019 10:14:30 AM CEST
 changes:

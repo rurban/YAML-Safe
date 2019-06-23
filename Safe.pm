@@ -14,38 +14,6 @@ use base 'Exporter';
 
 use XSLoader;
 
-#use Scalar::Util qw/ openhandle /;
-#sub _DumpFile {
-#    my $OUT;
-#    my $filename = shift;
-#    if (openhandle $filename) {
-#        $OUT = $filename;
-#    }
-#    else {
-#        my $mode = '>';
-#        if ($filename =~ /^\s*(>{1,2})\s*(.*)$/) {
-#            ($mode, $filename) = ($1, $2);
-#        }
-#        open $OUT, $mode, $filename
-#          or die "Can't open '$filename' for output:\n$!";
-#    }
-#    local $/ = "\n"; # reset special to "sane"
-#    print $OUT YAML::Safe::Dump(@_);
-#}
-#
-#sub _LoadFile {
-#    my $IN;
-#    my $filename = shift;
-#    if (openhandle $filename) {
-#        $IN = $filename;
-#    }
-#    else {
-#        open $IN, $filename
-#          or die "Can't open '$filename' for input:\n$!";
-#    }
-#    return YAML::Safe::Load(do { local $/; local $_ = <$IN> });
-#}
-
 # XXX The following code should be moved from Perl to C.
 $YAML::Safe::coderef2text = sub {
     my $coderef = shift;
@@ -180,12 +148,12 @@ date.  YAML::XS never produced code which could be read from YAML, and
 thus was unsuitable to be used as YAML replacement for core and CPAN.
 It also required reading and setting options from global variables.
 
-Kirill Siminov's C<libyaml> is a good YAML library implementation. The
+Kirill Siminov's C<libyaml> is a YAML library implementation. The
 C library is written precisely to the YAML 1.1 specification, and
 offers YAML 1.2 support. It was originally bound to Python and was
 later bound to Ruby.  C<libsyck> is written a bit more elegant, has
 less bugs, is not as strict as libyaml, but misses some YAML
-features. It can only do YAML 1.0
+features. It can only do YAML 1.0.
 
 This module exports the functions C<Dump> and C<Load>, and do work as
 functions exactly like L<YAML::XS> and C<YAML.pm>'s corresponding
@@ -195,6 +163,8 @@ support the old globals anymore.
 
 There are also new Safe variants of Load and Dump methods, and
 options as setter methods.
+With the Safe methods you can enforce loading YAML 1.0 files only,
+all unsafe tags are removed. By default all blessed data is unsafe.
 
 If you set the option C<noindentmap>, C<YAML::Safe> will behave like
 with version E<lt> 0.70, which creates yml files which cannot be read
