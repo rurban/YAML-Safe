@@ -21,7 +21,7 @@ unless (eval { require JSON::MaybeXS }) {
 my $class = JSON::MaybeXS::_choose_json_module();
 my $ver;
 { no strict 'refs'; $ver = ${$class."::VERSION"}; }
-my %minver = ( 'Cpanel::JSON::XS' => 4.0,
+my %minver = ( 'Cpanel::JSON::XS' => 3.0236,
                'JSON::XS' => 3.0 );
 plan skip_all => "$class $ver too old"
   if !exists $minver{$class} or $ver < $minver{$class};

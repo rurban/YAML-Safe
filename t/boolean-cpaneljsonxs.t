@@ -10,22 +10,16 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
-unless (eval { require Cpanel::JSON::XS }) {
-    plan skip_all => "Cpanel::JSON::XS not installed";
-    exit;
-}
+plan skip_all => "Cpanel::JSON::XS not installed"
+  unless eval { require Cpanel::JSON::XS };
 plan skip_all => "Cpanel::JSON::XS $Cpanel::JSON::XS::VERSION too old"
-    if $Cpanel::JSON::XS::VERSION < 4.0;
-if ($] < 5.008009) {
-    plan skip_all => "perl $] too old for boolean()";
-    exit;
-}
+    if $Cpanel::JSON::XS::VERSION < 3.0236;
+plan skip_all => "perl $] too old for boolean()"
+  if $] < 5.008009;
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
-if ($@ and $@ =~ m{JSON/PP}) {
-    plan skip_all => "JSON::PP also not installed";
-    exit;
-}
+plan skip_all => "JSON::PP also not installed"
+  if ($@ and $@ =~ m{JSON/PP});
 
 plan tests => 7;
 
