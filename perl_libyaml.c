@@ -1,4 +1,4 @@
-#include <perl_libyaml.h>
+#include "perl_libyaml.h"
 
 static SV *
 load_node(YAML *self);
@@ -1604,8 +1604,7 @@ yaml_destroy (YAML *self)
 {
     if (!self)
         return;
-    if (self->filename)
-        Safefree (self->filename);
+    /* self->filename gets deleted with sv_file */
     yaml_parser_delete (&self->parser);
     yaml_event_delete (&self->event);
     yaml_emitter_delete (&self->emitter);

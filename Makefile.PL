@@ -45,11 +45,14 @@ WriteMakefile(
 package MY;
 sub top_targets {
   local $_ = shift->SUPER::top_targets(@_);
-  s/\$\(FIRST_MAKEFILE\) blibdirs/\$(FIRST_MAKEFILE\) blibdirs README/;
+  s/\$\(FIRST_MAKEFILE\) blibdirs/\$(FIRST_MAKEFILE\) blibdirs README/
+      unless $ENV{PERL_CORE};
   $_
 }
 sub depend {
-  "
+  $ENV{PERL_CORE}
+  ? ""
+  : "
 README : \$(VERSION_FROM)
 	pod2text \$(VERSION_FROM) > README
 
