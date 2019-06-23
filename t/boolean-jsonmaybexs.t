@@ -10,14 +10,10 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
-if ($] < 5.008009) {
-    plan skip_all => "perl $] too old for boolean()";
-    exit;
-}
-unless (eval { require JSON::MaybeXS }) {
-    plan skip_all => "JSON::MaybeXS not installed";
-    exit;
-}
+plan skip_all => "perl $] too old for boolean()"
+  if ($] < 5.008009);
+skip_all_unless_require "JSON::MaybeXS";
+
 my $class = JSON::MaybeXS::_choose_json_module();
 my $ver;
 { no strict 'refs'; $ver = ${$class."::VERSION"}; }
@@ -28,10 +24,8 @@ plan skip_all => "$class $ver too old"
 print STDERR "# Found $class $ver\n";
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
-if ($@ and $@ =~ m{JSON/PP}) {
-    plan skip_all => "JSON::PP also not installed";
-    exit;
-}
+plan skip_all => "JSON::PP also not installed"
+  if ($@ and $@ =~ m{JSON/PP});
 
 plan tests => 7;
 

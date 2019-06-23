@@ -10,22 +10,15 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
-if ($] < 5.008009) {
-    plan skip_all => "perl $] too old for boolean()";
-    exit;
-}
-unless (eval { require JSON::XS }) {
-    plan skip_all => "JSON::XS not installed";
-    exit;
-}
+plan skip_all => "perl $] too old for boolean()"
+  if ($] < 5.008009);
+skip_all_unless_require "JSON::XS";
 plan skip_all => "JSON::XS $JSON::XS::VERSION too old"
     if $JSON::XS::VERSION < 3.0;
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
-if ($@ and $@ =~ m{JSON/PP}) {
-    plan skip_all => "JSON::PP also not installed";
-    exit;
-}
+plan skip_all => "JSON::PP also not installed"
+  if ($@ and $@ =~ m{JSON/PP});
 
 plan tests => 7;
 

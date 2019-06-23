@@ -10,8 +10,7 @@ stringfalse: 'false'
 stringtrue: 'true'
 ...
 
-plan skip_all => "Cpanel::JSON::XS not installed"
-  unless eval { require Cpanel::JSON::XS };
+skip_all_unless_require "Cpanel::JSON::XS";
 plan skip_all => "Cpanel::JSON::XS $Cpanel::JSON::XS::VERSION too old"
     if $Cpanel::JSON::XS::VERSION < 3.0236;
 plan skip_all => "perl $] too old for boolean()"

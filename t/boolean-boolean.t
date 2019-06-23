@@ -11,14 +11,10 @@ stringtrue: 'true'
 ...
 
 my $obj = eval { YAML::Safe->new->boolean("boolean") };
-if ($@ and $@ =~ m{boolean}) {
-    plan skip_all => "boolean not installed";
-    exit;
-}
-if ($] < 5.008009) {
-    plan skip_all => "perl $] too old for boolean()";
-    exit;
-}
+plan skip_all => "boolean not installed"
+  if ($@ and $@ =~ m{boolean});
+plan skip_all => "perl $] too old for boolean()"
+  if ($] < 5.008009);
 
 plan tests => 7;
 
