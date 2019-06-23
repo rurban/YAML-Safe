@@ -11,4 +11,4 @@ sub libyaml {
 my @x = (256, 'xxx', libyaml({foo => 'bar'}));
 
 isnt "@x", '256 xxx 256 xxx 256',
-    "YAML::Safe::LibYAML doesn't mess up the call stack";
+    "YAML::Safe doesn't mess up the call stack";
