@@ -164,11 +164,11 @@ Configuration
         "YAML::Safe::coderef2text()".
 
     "quotenum"
-        If enabled strings that look like numbers but have not been numified
-        will be quoted when dumping.
+        Default: enabled.
 
-        This ensures leading that things like leading zeros and other
-        formatting are preserved.
+        If enabled strings that look like numbers but have not been numified
+        will be quoted when dumping. This ensures leading that things like
+        leading zeros and other formatting are preserved.
 
     "noindentmap"
         If enabled fallback to the old "YAML::Safe" behavior to omit the

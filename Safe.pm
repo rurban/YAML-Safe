@@ -350,9 +350,10 @@ C<YAML::Safe::coderef2text()>.
 
 =item C<quotenum>
 
+Default: enabled.
+
 If enabled strings that look like numbers but have not
 been numified will be quoted when dumping.
-
 This ensures leading that things like leading zeros and other
 formatting are preserved.
 

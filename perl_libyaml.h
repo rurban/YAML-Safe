@@ -111,7 +111,7 @@ PERL_STATIC_INLINE YAML*
 yaml_init (YAML *self)
 {
   Zero (self, 1, YAML);
-  self->flags = F_UNICODE;
+  self->flags = F_UNICODE|F_QUOTENUM;
   self->indent = 2;
   self->wrapwidth = 80;
   return self;

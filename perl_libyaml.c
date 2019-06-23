@@ -64,11 +64,11 @@ static const char* options[] =
    "loadcode",        /* bool, default: 0 */
    /* Dumper */
    "dumpcode",        /* bool, default: 0 */
-   "quotenum",        /* bool, default: 0 */
    "noindentmap",     /* bool, default: 0 */
    "indent",          /* int, default: 2 */
    "wrapwidth",       /* int, default: 80 */
    "canonical",       /* bool, default: 0 */
+   "quotenum",        /* bool, default: 1 */
    "unicode",         /* bool, default: 1 If unescaped Unicode characters are allowed */
    "encoding",        /* "any", "utf8", "utf16le" or "utf16be" */
    "linebreak",       /* "any", "cr", "ln" or "crln" */
@@ -1427,15 +1427,13 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
             (string_len == 0) ||
             (string_len == 1 && strEQ(string, "~")) ||
             (string_len == 4 &&
-             (strEQ(string, "true") ||
-              strEQ(string, "null"))) ||
-            (string_len == 5 &&
-             strEQ(string, "false")) ||
+             (strEQ(string, "true") || strEQ(string, "null"))) ||
+            (string_len == 5 && strEQ(string, "false")) ||
             (SvTYPE(node_clone) >= SVt_PVGV) ||
             ( (self->flags & F_QUOTENUM) &&
               !SvNIOK(node_clone) &&
-              looks_like_number(node_clone) )
-        ) {
+              looks_like_number(node_clone) ) )
+        {
             style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
         } else {
             if (!SvUTF8(node_clone)) {
