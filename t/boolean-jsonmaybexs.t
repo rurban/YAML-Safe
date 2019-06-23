@@ -25,6 +25,7 @@ my %minver = ( 'Cpanel::JSON::XS' => 3.0236,
                'JSON::XS' => 3.0 );
 plan skip_all => "$class $ver too old"
   if !exists $minver{$class} or $ver < $minver{$class};
+print STDERR "# Found $class $ver\n";
 
 my $obj = eval { YAML::Safe->new->boolean("JSON::PP") };
 if ($@ and $@ =~ m{JSON/PP}) {

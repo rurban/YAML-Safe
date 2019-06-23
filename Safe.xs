@@ -13,22 +13,59 @@ init_MY_CXT(pTHX_ my_cxt_t * cxt)
   cxt->yaml_str = NULL;
 }
 
+static NV
+version_number(const char* name)
+{
+    GV* gv = gv_fetchpv(name, 0, SVt_PV);
+    SV* version = gv ? GvSV(gv) : NULL;
+    if (!version)
+        return -1.0;
+    if (SvNOK(version))
+        return SvNVX(version);
+    if (SvIOK(version))
+        return (NV)SvIVX(version);
+    if (SvPOK(version)) {
+        return Atof(SvPVX(version));
+    }
+    return -1.0;
+}
+
 static void
 better_load_module(const char* stash, SV* name)
 {
-  char *copy = strdup(SvPVX(name)); /* just the name with added "::" */
-  if (!gv_fetchpvn_flags(stash, strlen(stash), GV_NOADD_NOINIT, SVt_PVHV)) {
-    /* On older perls (<5.20) this corrupts ax */
-    load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(name), NULL);
-    /* This overwrites value with the module path from %INC. Undo that */
-    SvREADONLY_off(name);
+    int badver = 0;
+    /* JSON::PP::Boolean:: or boolean:: */
+    GV* stashgv = gv_fetchpvn_flags(stash, strlen(stash), GV_NOADD_NOINIT, SVt_PVHV);
+    if (stashgv && strEQc(name, "JSON::PP")) {
+        /* Check for compat. versions. Which JSON::PP::Boolean is loaded? */
+        /* Cpanel::JSON::XS needs 3.0236, JSON::XS needs 3.0 */
+        char* file = GvFILE(stashgv);
+        if (file) {
+            /* we rely on C89 now */
+            if (strstr(file, "Cpanel/JSON/XS.pm") &&
+                version_number("Cpanel::JSON::XS::VERSION") < 3.0236)
+                badver = 1;
+            else if (strstr(file, "Types/Serialiser.pm") &&
+                     version_number("Types::Serialiser::VERSION") < 1.0)
+                badver = 1;
+            else if (strstr(file, "JSON/backportPP/Boolean.pm") &&
+                     version_number("JSON::backportPP::Boolean::VERSION") < 3.0)
+                badver = 1;
+        }
+    }
+    if (!stashgv || badver) {
+        char *copy = strdup(SvPVX(name));
+        /* On older perls (<5.20) this corrupted ax */
+        load_module(PERL_LOADMOD_NOIMPORT, SvREFCNT_inc_NN(name), NULL);
+        /* This overwrites value with the module path from %INC. Undo that */
+        SvREADONLY_off(name);
 #ifdef SVf_PROTECT
-    SvFLAGS(name) &= ~SVf_PROTECT;
+        SvFLAGS(name) &= ~SVf_PROTECT;
 #endif
-    sv_force_normal_flags(name, 0);
-    sv_setpvn(name, copy, strlen(copy));
-  }
-  free(copy);
+        sv_force_normal_flags(name, 0);
+        sv_setpvn(name, copy, strlen(copy));
+        free(copy);
+    }
 }
 
 MODULE = YAML::Safe		PACKAGE = YAML::Safe
