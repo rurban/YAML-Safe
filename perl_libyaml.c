@@ -423,12 +423,12 @@ load_node(YAML *self)
 
             if (tag) {
                 /* Handle mapping tagged as a Perl hard reference */
-                if (strEQc(tag, TAG_PERL_REF)) {
+                if (strEQ(tag, TAG_PERL_REF)) {
                     return_sv = load_scalar_ref(self);
                     break;
                 }
                 /* Handle mapping tagged as a Perl typeglob */
-                if (strEQc(tag, TAG_PERL_GLOB)) {
+                if (strEQ(tag, TAG_PERL_GLOB)) {
                     return_sv = load_glob(self);
                     break;
                 }
@@ -497,9 +497,9 @@ load_mapping(YAML *self, char *tag)
 
     /* Deal with possibly blessing the hash if the YAML tag has a class */
     if (tag) {
-        if (strEQc(tag, TAG_PERL_PREFIX "hash")) {
+        if (strEQ(tag, TAG_PERL_PREFIX "hash")) {
         }
-        else if (strEQc(tag, YAML_MAP_TAG)) {
+        else if (strEQ(tag, YAML_MAP_TAG)) {
         }
         else {
             char *klass;
@@ -546,9 +546,9 @@ load_sequence(YAML *self)
         av_push(array, node);
     }
     if (tag) {
-        if (strEQc(tag, TAG_PERL_PREFIX "array")) {
+        if (strEQ(tag, TAG_PERL_PREFIX "array")) {
         }
-        else if (strEQc(tag, YAML_SEQ_TAG)) {
+        else if (strEQ(tag, YAML_SEQ_TAG)) {
         }
         else {
             char *klass;
@@ -589,10 +589,10 @@ load_scalar(YAML *self)
     char *tag = (char *)self->event.data.scalar.tag;
     yaml_scalar_style_t style = self->event.data.scalar.style;
     if (tag) {
-        if (strEQc(tag, YAML_STR_TAG)) {
+        if (strEQ(tag, YAML_STR_TAG)) {
             style = YAML_SINGLE_QUOTED_SCALAR_STYLE;
         }
-        else if (strEQc(tag, YAML_INT_TAG) || strEQc(tag, YAML_FLOAT_TAG)) {
+        else if (strEQ(tag, YAML_INT_TAG) || strEQ(tag, YAML_FLOAT_TAG)) {
             /* TODO check int/float */
             scalar = newSVpvn(string, length);
             if ( looks_like_number(scalar) ) {
@@ -609,10 +609,10 @@ load_scalar(YAML *self)
                              SvREFCNT_inc(scalar), 0);
             return scalar;
         }
-        else if (strEQc(tag, YAML_NULL_TAG) &&
-                 (strEQc(string, "~") ||
-                  strEQc(string, "null") ||
-                  strEQc(string, "")))
+        else if (strEQ(tag, YAML_NULL_TAG) &&
+                 (strEQ(string, "~") ||
+                  strEQ(string, "null") ||
+                  strEQ(string, "")))
         {
             scalar = newSV(0);
             if (anchor)
@@ -658,14 +658,14 @@ load_scalar(YAML *self)
     }
 
     else if (style == YAML_PLAIN_SCALAR_STYLE) {
-        if (strEQc(string, "~") || strEQc(string, "null") || strEQc(string, "")) {
+        if (strEQ(string, "~") || strEQ(string, "null") || strEQ(string, "")) {
             scalar = newSV(0);
             if (anchor)
                 (void)hv_store(self->anchors, anchor, strlen(anchor),
                                SvREFCNT_inc(scalar), 0);
             return scalar;
         }
-        else if (strEQc(string, "true")) {
+        else if (strEQ(string, "true")) {
 #if (PERL_BCDVERSION >= 0x5008009)
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
                 scalar = sv_setref_iv(newSV(1), "JSON::PP::Boolean", 1);
@@ -683,7 +683,7 @@ load_scalar(YAML *self)
                                SvREFCNT_inc(scalar), 0);
             return scalar;
         }
-        else if (strEQc(string, "false")) {
+        else if (strEQ(string, "false")) {
 #if (PERL_BCDVERSION >= 0x5008009)
             if (self->boolean == YAML_BOOLEAN_JSONPP) {
                 scalar = sv_setref_iv(newSV(0), "JSON::PP::Boolean", 0);
@@ -1153,7 +1153,7 @@ dump_node(YAML *self, SV *node)
                 if ((mg = mg_find(rnode, PERL_MAGIC_qr))) {
                     tag = (yaml_char_t *)form(TAG_PERL_PREFIX "regexp");
                     klass = sv_reftype(rnode, TRUE);
-                    if (!strEQc(klass, "Regexp"))
+                    if (!strEQ(klass, "Regexp"))
                         tag = (yaml_char_t *)form("%s:%s", tag, klass);
                 }
                 dump_scalar(self, node, tag);
@@ -1179,7 +1179,7 @@ dump_node(YAML *self, SV *node)
         else if (ref_type == SVt_REGEXP) {
             yaml_char_t *tag = (yaml_char_t *)form(TAG_PERL_PREFIX "regexp");
             klass = sv_reftype(rnode, TRUE);
-            if (!strEQc(klass, "Regexp"))
+            if (!strEQ(klass, "Regexp"))
                 tag = (yaml_char_t *)form("%s:%s", tag, klass);
             dump_scalar(self, node, tag);
         }
@@ -1239,7 +1239,7 @@ get_yaml_tag(SV *node)
             break;
         case SVt_PVCV:
             kind = (char*)"code";
-            if (strEQc(klass, "CODE"))
+            if (strEQ(klass, "CODE"))
                 tag = (yaml_char_t *)form("%s%s", TAG_PERL_PREFIX, kind);
             else
                 tag = (yaml_char_t *)form("%s%s:%s", TAG_PERL_PREFIX, kind, klass);
@@ -1425,12 +1425,12 @@ dump_scalar(YAML *self, SV *node, yaml_char_t *tag)
         string = SvPV_nomg(node_clone, string_len);
         if (
             (string_len == 0) ||
-            (string_len == 1 && strEQc(string, "~")) ||
+            (string_len == 1 && strEQ(string, "~")) ||
             (string_len == 4 &&
-             (strEQc(string, "true") ||
-              strEQc(string, "null"))) ||
+             (strEQ(string, "true") ||
+              strEQ(string, "null"))) ||
             (string_len == 5 &&
-             strEQc(string, "false")) ||
+             strEQ(string, "false")) ||
             (SvTYPE(node_clone) >= SVt_PVGV) ||
             ( (self->flags & F_QUOTENUM) &&
               !SvNIOK(node_clone) &&

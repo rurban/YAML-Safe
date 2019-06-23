@@ -37,12 +37,6 @@
 #ifndef HvNAMEUTF8
 # define HvNAMEUTF8(hv) 0
 #endif
-/* from cperl */
-#ifndef strEQc
-/* the buffer ends with \0, includes comparison of the \0.
-   better than strEQ as it uses memcmp, word-wise comparison. */
-# define strEQc(s, c) memEQ(s, ("" c ""), sizeof(c))
-#endif
 
 #define TAG_PERL_PREFIX "tag:yaml.org,2002:perl/"
 #define TAG_PERL_REF TAG_PERL_PREFIX "ref"

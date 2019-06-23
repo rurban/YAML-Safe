@@ -36,7 +36,7 @@ better_load_module(const char* stash, SV* name)
     int badver = 0;
     /* JSON::PP::Boolean:: or boolean:: */
     GV* stashgv = gv_fetchpvn_flags(stash, strlen(stash), GV_NOADD_NOINIT, SVt_PVHV);
-    if (stashgv && strEQc(SvPVX(name), "JSON::PP")) {
+    if (stashgv && strEQ(SvPVX(name), "JSON::PP")) {
         /* Check for compat. versions. Which JSON::PP::Boolean is loaded? */
         /* Cpanel::JSON::XS needs 3.0236, JSON::XS needs 3.0 */
         char* file = GvFILE(stashgv);
@@ -290,19 +290,19 @@ boolean (YAML *self, SV *value)
         (void)RETVAL;
         if (SvPOK(value)) {
 #if (PERL_BCDVERSION >= 0x5008009)
-          if (strEQc(SvPVX(value), "JSON::PP")) {
+          if (strEQ(SvPVX(value), "JSON::PP")) {
             self->boolean = YAML_BOOLEAN_JSONPP;
             /* check JSON::PP::Boolean first, as it's implemented with
                JSON, JSON::XS and many others also. In CORE since 5.13.9 */
             better_load_module("JSON::PP::Boolean::", value);
           }
-          else if (strEQc(SvPVX(value), "boolean")) {
+          else if (strEQ(SvPVX(value), "boolean")) {
             self->boolean = YAML_BOOLEAN_BOOLEAN;
             better_load_module("boolean::", value);
           }
           else
 #endif
-          if (strEQc(SvPVX(value), "false") || !SvTRUE(value)) {
+          if (strEQ(SvPVX(value), "false") || !SvTRUE(value)) {
             self->boolean = YAML_BOOLEAN_NONE;
           }
           else {
@@ -332,16 +332,16 @@ YAML*
 encoding (YAML *self, char *value)
     CODE:
         (void)RETVAL;
-        if (strEQc(value, "any")) {
+        if (strEQ(value, "any")) {
           self->encoding = YAML_ANY_ENCODING;
         }
-        else if (strEQc(value, "utf8")) {
+        else if (strEQ(value, "utf8")) {
           self->encoding = YAML_UTF8_ENCODING;
         }
-        else if (strEQc(value, "utf16le")) {
+        else if (strEQ(value, "utf16le")) {
           self->encoding = YAML_UTF16LE_ENCODING;
         }
-        else if (strEQc(value, "utf16be")) {
+        else if (strEQ(value, "utf16be")) {
           self->encoding = YAML_UTF16BE_ENCODING;
         }
         else {
@@ -365,16 +365,16 @@ YAML*
 linebreak (YAML *self, char *value)
     CODE:
         (void)RETVAL;
-        if (strEQc(value, "any")) {
+        if (strEQ(value, "any")) {
           self->linebreak = YAML_ANY_BREAK;
         }
-        else if (strEQc(value, "cr")) {
+        else if (strEQ(value, "cr")) {
           self->linebreak = YAML_CR_BREAK;
         }
-        else if (strEQc(value, "ln")) {
+        else if (strEQ(value, "ln")) {
           self->linebreak = YAML_LN_BREAK;
         }
-        else if (strEQc(value, "crln")) {
+        else if (strEQ(value, "crln")) {
           self->linebreak = YAML_CRLN_BREAK;
         }
         else {
