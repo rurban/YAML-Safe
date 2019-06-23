@@ -13,8 +13,8 @@ use base 'Exporter';
 );
 
 use XSLoader;
-use Scalar::Util qw/ openhandle /;
 
+#use Scalar::Util qw/ openhandle /;
 #sub _DumpFile {
 #    my $OUT;
 #    my $filename = shift;
@@ -45,7 +45,6 @@ use Scalar::Util qw/ openhandle /;
 #    }
 #    return YAML::Safe::Load(do { local $/; local $_ = <$IN> });
 #}
-
 
 # XXX The following code should be moved from Perl to C.
 $YAML::Safe::coderef2text = sub {
@@ -264,17 +263,29 @@ via getter and setter methods.
 =over
 
 =item C<enablecode>
+=item C<get_enablecode>
 
 If enabled turns on handling of code blocks for the loader and dumper.
 It sets both the C<loadcode> and C<dumpcode> option.
 
+=item C<disableblessed>
+=item C<get_disableblessed>
+
+Default 0
+
+If set, i.e. blessed is disabled, all blessed data for the Loader and
+Dumper is unblessed.  This is similar to the Safe methods without any
+SafeClass set.
+
 =item C<encoding>
+=item C<get_encoding>
 
 Default "utf8"
 
 Set to "any", "utf8", "utf16le" or "utf16be".
 
 =item C<boolean>
+=item C<get_boolean>
 
 Set to "JSON::PP" or "boolean" to enable or 0 to disable.  Encodes
 true and false to the respective classes. It will try to load
@@ -302,6 +313,7 @@ If you simply need to load "perl booleans" that are true or false in boolean
 context, you will be fine with the default setting.
 
 =item C<safemode>
+=item C<get_safemode>
 
 Default 0
 
@@ -317,6 +329,7 @@ via getter and setter methods.
 =over
 
 =item C<nonstrict>
+=item C<get_nonstrict>
 
 If enabled permits certain reader errors to loosely match other YAML
 module semantics. In detail: Allow B<"control characters are not
@@ -332,6 +345,7 @@ required value consists only of invalid control characters, the loader
 returns an error, unlike with non-strict YAML modules.
 
 =item C<loadcode>
+=item C<get_loadcode>
 
 Turns on deparsing and evaling of code blocks in the loader.
 
@@ -344,11 +358,13 @@ via globals variables or as optional getter and setter methods.
 =over
 
 =item C<dumpcode>
+=item C<get_dumpcode>
 
 If enabled supports Dump of CV code blocks via
 C<YAML::Safe::coderef2text()>.
 
 =item C<quotenum>
+=item C<get_quotenum>
 
 Default: enabled.
 
@@ -358,6 +374,7 @@ This ensures leading that things like leading zeros and other
 formatting are preserved.
 
 =item C<noindentmap>
+=item C<get_noindentmap>
 
 If enabled fallback to the old C<YAML::Safe> behavior to omit the
 indentation of map keys, which arguably violates the YAML spec, is
@@ -374,22 +391,27 @@ Enabled
      - this author
 
 =item C<indent>
+=item C<get_indent>
 
-Default 2
+Default 2.
+Valid values are from 1 - 10.
 
 =item C<wrapwidth>
+=item C<get_wrapwidth>
 
 Default 80
 
 Control text wrapping.
 
 =item C<canonical>
+=item C<get_canonical>
 
 Default: disabled.
 
 Enable to sort map keys.
 
 =item C<unicode>
+=item C<get_unicode>
 
 Default 1
 
@@ -397,12 +419,14 @@ Set to undef or 0 to disallow unescaped non-ASCII characters.
 e.g. C<YAML::Safe->new->unicode(0)>
 
 =item C<linebreak>
+=item C<get_linebreak>
 
 Default ln
 
 Set to "any", "cr", "ln" or "crln".
 
 =item C<openended>
+=item C<get_openended>
 
 Default 0
 

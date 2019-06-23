@@ -59,6 +59,9 @@ release : dist
 	git push
 	git push --tags
 
+xtest :: test
+	\$(MAKE) test TEST_FILES=xt/*.t
+
 # versioned gcc needs overrides
 GCOV = gcov
 test_cover :: pure_all

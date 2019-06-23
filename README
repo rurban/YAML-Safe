@@ -93,16 +93,23 @@ Configuration
   Options for Loader and Dumper
     via getter and setter methods.
 
-    "enablecode"
+    "enablecode" =item "get_enablecode"
         If enabled turns on handling of code blocks for the loader and
         dumper. It sets both the "loadcode" and "dumpcode" option.
 
-    "encoding"
+    "disableblessed" =item "get_disableblessed"
+        Default 0
+
+        If set, i.e. blessed is disabled, all blessed data for the Loader
+        and Dumper is unblessed. This is similar to the Safe methods without
+        any SafeClass set.
+
+    "encoding" =item "get_encoding"
         Default "utf8"
 
         Set to "any", "utf8", "utf16le" or "utf16be".
 
-    "boolean"
+    "boolean" =item "get_boolean"
         Set to "JSON::PP" or "boolean" to enable or 0 to disable. Encodes
         true and false to the respective classes. It will try to load
         JSON::PP or boolean and die if it can't be loaded.
@@ -130,7 +137,7 @@ Configuration
         If you simply need to load "perl booleans" that are true or false in
         boolean context, you will be fine with the default setting.
 
-    "safemode"
+    "safemode" =item "get_safemode"
         Default 0
 
         If enabled by using the the Safe methods restrict the blessing only
@@ -139,7 +146,7 @@ Configuration
   Loader Options
     via getter and setter methods.
 
-    "nonstrict"
+    "nonstrict" =item "get_nonstrict"
         If enabled permits certain reader errors to loosely match other YAML
         module semantics. In detail: Allow "control characters are not
         allowed" with while parsing a quoted scalar found unknown escape
@@ -153,24 +160,24 @@ Configuration
         required value consists only of invalid control characters, the
         loader returns an error, unlike with non-strict YAML modules.
 
-    "loadcode"
+    "loadcode" =item "get_loadcode"
         Turns on deparsing and evaling of code blocks in the loader.
 
   Dumper Options
     via globals variables or as optional getter and setter methods.
 
-    "dumpcode"
+    "dumpcode" =item "get_dumpcode"
         If enabled supports Dump of CV code blocks via
         "YAML::Safe::coderef2text()".
 
-    "quotenum"
+    "quotenum" =item "get_quotenum"
         Default: enabled.
 
         If enabled strings that look like numbers but have not been numified
         will be quoted when dumping. This ensures leading that things like
         leading zeros and other formatting are preserved.
 
-    "noindentmap"
+    "noindentmap" =item "get_noindentmap"
         If enabled fallback to the old "YAML::Safe" behavior to omit the
         indentation of map keys, which arguably violates the YAML spec, is
         different to all other YAML libraries and causes "YAML.pm" to fail.
@@ -185,31 +192,31 @@ Configuration
              authors:
              - this author
 
-    "indent"
-        Default 2
+    "indent" =item "get_indent"
+        Default 2. Valid values are from 1 - 10.
 
-    "wrapwidth"
+    "wrapwidth" =item "get_wrapwidth"
         Default 80
 
         Control text wrapping.
 
-    "canonical"
+    "canonical" =item "get_canonical"
         Default: disabled.
 
         Enable to sort map keys.
 
-    "unicode"
+    "unicode" =item "get_unicode"
         Default 1
 
         Set to undef or 0 to disallow unescaped non-ASCII characters. e.g.
         "YAML::Safe-"new->unicode(0)>
 
-    "linebreak"
+    "linebreak" =item "get_linebreak"
         Default ln
 
         Set to "any", "cr", "ln" or "crln".
 
-    "openended"
+    "openended" =item "get_openended"
         Default 0
 
         If enabled embed the yaml into "...", if an explicit document end is

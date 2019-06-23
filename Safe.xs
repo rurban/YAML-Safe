@@ -210,7 +210,9 @@ void CLONE (...)
 
 #endif
 
-void xxxEND(...)
+#if 0
+
+void END(...)
     PREINIT:
         dMY_CXT;
         SV * sv;
@@ -220,6 +222,8 @@ void xxxEND(...)
         SvREFCNT_dec(sv);
 	/* skip implicit PUTBACK, returning @_ to caller, more efficient*/
         return;
+
+#endif
 
 void DESTROY (YAML *self)
     CODE:

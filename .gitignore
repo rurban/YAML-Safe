@@ -4,6 +4,8 @@ Safe.c
 Safe.o
 MYMETA.json
 MYMETA.yml
+META.json
+META.yml
 Makefile
 Makefile.old
 TAGS
