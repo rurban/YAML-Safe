@@ -14,8 +14,8 @@
 #define NEED_sv_2pvbyte
 #define NEED_gv_fetchpvn_flags
 #include "ppport.h"
-#include <yaml.h>
-#include <ppport_sort.h>
+#include "yaml.h"
+#include "ppport_sort.h"
 
 #ifndef PERL_STATIC_INLINE
 #define PERL_STATIC_INLINE static
