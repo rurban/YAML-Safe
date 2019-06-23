@@ -6,13 +6,17 @@ run {
     my $block = shift;
     my @values = eval $block->perl;
     is Dump(@values), $block->yaml, "Dump - " . $block->name
-        unless $block->SKIP_DUMP;
-    is_deeply [Load($block->yaml)], \@values, "Load - " . $block->name;
+      unless $block->SKIP_DUMP;
+    if ($] < 5.008005 and $block->name =~ /Circular/) {
+      ok(1, "skip Load of circular refs with $]");
+    } else {
+      is_deeply [Load($block->yaml)], \@values, "Load - " . $block->name;
+    }
 };
 
 my @warn;
 $SIG{__WARN__} = sub { push(@warn, shift) };
-my $z = YAML::Safe::Load(<<EOY);
+my $z = Load(<<EOY);
 ---
 foo:
   - url: &1
@@ -20,7 +24,7 @@ foo:
 EOY
 pop @{$z->{foo}};
 
-is_deeply \@warn, [], "No free of unref warnings";
+is_deeply \@warn, [], "Free of unref warnings";
 
 
 __DATA__
