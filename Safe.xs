@@ -36,7 +36,7 @@ better_load_module(const char* stash, SV* name)
     int badver = 0;
     /* JSON::PP::Boolean:: or boolean:: */
     GV* stashgv = gv_fetchpvn_flags(stash, strlen(stash), GV_NOADD_NOINIT, SVt_PVHV);
-    if (stashgv && strEQc(name, "JSON::PP")) {
+    if (stashgv && strEQc(SvPVX(name), "JSON::PP")) {
         /* Check for compat. versions. Which JSON::PP::Boolean is loaded? */
         /* Cpanel::JSON::XS needs 3.0236, JSON::XS needs 3.0 */
         char* file = GvFILE(stashgv);
