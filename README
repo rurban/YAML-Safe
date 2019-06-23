@@ -35,12 +35,12 @@ Description
     unsuitable to be used as YAML replacement for core and CPAN. It also
     required reading and setting options from global variables.
 
-    Kirill Siminov's "libyaml" is a good YAML library implementation. The C
+    Kirill Siminov's "libyaml" is a YAML library implementation. The C
     library is written precisely to the YAML 1.1 specification, and offers
     YAML 1.2 support. It was originally bound to Python and was later bound
     to Ruby. "libsyck" is written a bit more elegant, has less bugs, is not
     as strict as libyaml, but misses some YAML features. It can only do YAML
-    1.0
+    1.0.
 
     This module exports the functions "Dump" and "Load", and do work as
     functions exactly like YAML::XS and "YAML.pm"'s corresponding functions.
@@ -49,7 +49,9 @@ Description
     anymore.
 
     There are also new Safe variants of Load and Dump methods, and options
-    as setter methods.
+    as setter methods. With the Safe methods you can enforce loading YAML
+    1.0 files only, all unsafe tags are removed. By default all blessed data
+    is unsafe.
 
     If you set the option "noindentmap", "YAML::Safe" will behave like with
     version < 0.70, which creates yml files which cannot be read by
