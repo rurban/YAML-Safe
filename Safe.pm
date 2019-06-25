@@ -347,8 +347,9 @@ formatting are preserved.
 =item C<get_noindentmap>
 
 If enabled fallback to the old C<YAML::Safe> behavior to omit the
-indentation of map keys, which arguably violates the YAML spec, is
-different to all other YAML libraries and causes C<YAML.pm> to fail.
+indentation of map keys, which arguably violates the first YAML spec
+(L<https://yaml.org/spec/1.0/#id2566128>), is different to most other
+YAML libraries and causes older C<YAML.pm> to fail.
 
 Disabled
 

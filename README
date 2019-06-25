@@ -181,8 +181,9 @@ Configuration
 
     "noindentmap" =item "get_noindentmap"
         If enabled fallback to the old "YAML::Safe" behavior to omit the
-        indentation of map keys, which arguably violates the YAML spec, is
-        different to all other YAML libraries and causes "YAML.pm" to fail.
+        indentation of map keys, which arguably violates the first YAML spec
+        (<https://yaml.org/spec/1.0/#id2566128>), is different to most other
+        YAML libraries and causes older "YAML.pm" to fail.
 
         Disabled
 
