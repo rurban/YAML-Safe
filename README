@@ -29,7 +29,7 @@ Synopsis
         $array = $yaml->SafeDumpFile("META.yml");
 
 Description
-    This module is a refactoring of YAML::XS, the old Perl XS binding to
+    This module is a re-factoring of YAML::XS, the old Perl XS binding to
     "libyaml" which offers Perl somewhat acceptable YAML support to date.
     YAML::XS never produced code which could be read from YAML, and thus was
     unsuitable to be used as YAML replacement for core and CPAN. It also
