@@ -7,10 +7,12 @@ $VERSION = eval $VERSION;
 
 use base 'Exporter';
 @YAML::Safe::EXPORT = qw(Load Dump);
-@YAML::Safe::EXPORT_OK = qw(LoadFile DumpFile);
+@YAML::Safe::EXPORT_OK = qw(LoadFile DumpFile NO_WRAP);
 %YAML::Safe::EXPORT_TAGS = (
     all => [qw(Dump Load LoadFile DumpFile)],
 );
+
+use constant NO_WRAP => 0xFFFF;
 
 use XSLoader;
 
